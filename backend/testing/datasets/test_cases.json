@@ -1,0 +1,57 @@
+[
+  {
+    "id": "TC-GEN-001",
+    "type": "content_generation",
+    "queries": ["Create a high-energy YouTube hook for a tech review of the latest Vision Pro."],
+    "context": { "project_id": "60f0f1f2f3f4f5f6f7f8f9fb", "user_id": "60f0f1f2f3f4f5f6f7f8f9fa" },
+    "expected": {
+      "constraints": ["must be under 15 words", "must mention immersive experience"],
+      "min_score": 0.8
+    }
+  },
+  {
+    "id": "TC-MT-002",
+    "type": "multi_turn",
+    "queries": [
+      "I want to make a video about productivity for software engineers.",
+      "Can you give me 3 ideas for this topic?",
+      "I choose the first one. Now generate a catchy hook for it."
+    ],
+    "context": { "project_id": "60f0f1f2f3f4f5f6f7f8f9fb", "user_id": "60f0f1f2f3f4f5f6f7f8f9fa", "thread_id": "t-prod-123" },
+    "expected": {
+      "constraints": ["must maintain context of productivity for engineers"],
+      "min_score": 0.8
+    }
+  },
+  {
+    "id": "TC-FAIL-003",
+    "type": "failure_injection",
+    "queries": ["Generate a script for a travel vlog."],
+    "context": { "project_id": "60f0f1f2f3f4f5f6f7f8f9fb", "user_id": "60f0f1f2f3f4f5f6f7f8f9fa" },
+    "failure_injection": "fail_llm",
+    "expected": {
+      "status": "error",
+      "error_contains": "Injected LLM failure"
+    }
+  },
+  {
+    "id": "TC-TOOL-004",
+    "type": "tool_usage",
+    "queries": ["What are the trending topics in AI on Twitter today?"],
+    "context": { "project_id": "60f0f1f2f3f4f5f6f7f8f9fb", "user_id": "60f0f1f2f3f4f5f6f7f8f9fa" },
+    "expected": {
+      "tools_used": ["trend_researcher"],
+      "min_score": 0.7
+    }
+  },
+  {
+    "id": "TC-COST-005",
+    "type": "cost_efficiency",
+    "queries": ["Write a 2000-word deep-dive script on the history of the Internet."],
+    "context": { "project_id": "60f0f1f2f3f4f5f6f7f8f9fb", "user_id": "60f0f1f2f3f4f5f6f7f8f9fa" },
+    "expected": {
+      "max_cost_cents": 50,
+      "min_score": 0.7
+    }
+  }
+]

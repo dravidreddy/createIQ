@@ -1,93 +1,174 @@
-# CreateIQ
+# CreateIQ 🚀
 
+**AI-Powered Content Creation Platform for Creators**
 
+CreateIQ is a full-stack application that uses a multi-agent AI pipeline to help content creators generate high-quality video scripts, from idea discovery to final polished content.
 
-## Getting started
+## Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### 🤖 AI Agent Pipeline
+1. **Idea Discovery Agent** - Searches trending topics and generates content ideas
+2. **Research Script Agent** - Deep research and comprehensive script generation
+3. **Screenplay Structure Agent** - Platform-specific structure and pacing guidance
+4. **Editing & Improvement Agent** - Final polish with engagement optimization
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### 🎨 Modern UI
+- Dark/Light mode toggle
+- Real-time streaming updates during generation
+- Responsive design with Tailwind CSS
+- Beautiful glassmorphism effects
 
-## Add your files
+### 🔐 Authentication
+- JWT-based authentication
+- Secure password hashing
+- Token refresh mechanism
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### 👤 Personalized Experience
+- Creator profile setup
+- Content niche selection
+- Platform-specific optimization
+- Target audience configuration
+
+## Tech Stack
+
+### Backend
+- **FastAPI** - Modern Python web framework
+- **LangGraph** - Multi-agent orchestration
+- **Google Gemini** - LLM provider (extensible to OpenAI)
+- **Tavily** - Web search for research
+- **FAISS** - Vector memory store
+- **SQLAlchemy** - Database ORM
+- **SQLite/PostgreSQL** - Database
+
+### Frontend
+- **React 18** - UI framework
+- **Vite** - Build tool
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **Zustand** - State management
+- **Axios** - API client
+
+## Getting Started
+
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- API Keys:
+  - Google Gemini API key
+  - Tavily API key (for web search)
+
+### Backend Setup
+
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+# source venv/bin/activate  # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+copy .env.example .env
+# Edit .env with your API keys
+
+# Run the server
+uvicorn app.main:app --reload
+```
+
+### Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Run dev server
+npm run dev
+```
+
+### Access the Application
+
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+## Environment Variables
+
+### Backend (.env)
+```
+# Required
+GEMINI_API_KEY=your-gemini-api-key
+TAVILY_API_KEY=your-tavily-api-key
+SECRET_KEY=your-secret-key-for-jwt
+
+# Optional
+DATABASE_URL=sqlite+aiosqlite:///./data/createiq.db
+LLM_PROVIDER=gemini
+DEBUG=true
+```
+
+## Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/dravidsharathreddy/createiq.git
-git branch -M main
-git push -uf origin main
+CreateIQ/
+├── backend/
+│   ├── app/
+│   │   ├── agents/         # AI agents (4 agents + orchestrator)
+│   │   ├── api/            # API routes
+│   │   ├── llm/            # LLM abstraction layer
+│   │   ├── models/         # Database models
+│   │   ├── schemas/        # Pydantic schemas
+│   │   ├── services/       # Business logic
+│   │   ├── tools/          # Search & memory tools
+│   │   └── utils/          # Utilities
+│   ├── data/               # SQLite DB & FAISS indexes
+│   └── requirements.txt
+└── frontend/
+    ├── src/
+    │   ├── components/     # UI components
+    │   ├── pages/          # Page components
+    │   ├── services/       # API service
+    │   ├── store/          # Zustand stores
+    │   └── types/          # TypeScript types
+    └── package.json
 ```
 
-## Integrate with your tools
+## API Endpoints
 
-* [Set up project integrations](https://gitlab.com/dravidsharathreddy/createiq/-/settings/integrations)
+### Authentication
+- `POST /api/v1/auth/signup` - Create account
+- `POST /api/v1/auth/login` - Login
+- `POST /api/v1/auth/refresh` - Refresh tokens
+- `GET /api/v1/auth/me` - Get current user
 
-## Collaborate with your team
+### Users
+- `GET /api/v1/users/me` - Get user with profile
+- `POST /api/v1/users/profile` - Create profile
+- `PUT /api/v1/users/profile` - Update profile
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Projects
+- `GET /api/v1/projects` - List projects
+- `POST /api/v1/projects` - Create project
+- `GET /api/v1/projects/{id}` - Get project
+- `DELETE /api/v1/projects/{id}` - Delete project
+- `POST /api/v1/projects/{id}/select-idea` - Select idea
 
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Agents
+- `POST /api/v1/agents/{id}/discover-ideas` - Run idea discovery
+- `POST /api/v1/agents/{id}/generate-script` - Generate script
+- `POST /api/v1/agents/{id}/analyze-screenplay` - Analyze screenplay
+- `POST /api/v1/agents/{id}/edit-script` - Edit and polish
+- `POST /api/v1/agents/{id}/run-pipeline` - Run full pipeline
+- `GET /api/v1/agents/{id}/stream/discover-ideas` - SSE stream
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+MIT License
+
+---
+
+Built with ❤️ using AI-powered content creation

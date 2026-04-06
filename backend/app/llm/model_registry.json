@@ -1,0 +1,113 @@
+{
+    "models": {
+        "llama-3-3-70b": {
+            "provider": "groq",
+            "model_id": "llama-3.3-70b-versatile",
+            "capabilities": ["fast", "drafting", "reasoning"],
+            "context_limit": 32768,
+            "cost_per_1k_input": 0.05,
+            "cost_per_1k_output": 0.1,
+            "latency_tier": "ultra_fast",
+            "default_timeout": 10.0,
+            "warmup": true
+        },
+        "llama-3-1-8b": {
+            "provider": "groq",
+            "model_id": "llama-3.1-8b-instant",
+            "capabilities": ["ultra_fast", "summarization"],
+            "context_limit": 32768,
+            "cost_per_1k_input": 0.01,
+            "cost_per_1k_output": 0.02,
+            "latency_tier": "ultra_fast",
+            "default_timeout": 5.0,
+            "warmup": true
+        },
+        "gpt-4o-mini": {
+            "provider": "openai",
+            "model_id": "gpt-4o-mini",
+            "capabilities": ["routing", "classification", "editing", "fast"],
+            "context_limit": 128000,
+            "cost_per_1k_input": 0.015,
+            "cost_per_1k_output": 0.06,
+            "latency_tier": "low",
+            "default_timeout": 15.0,
+            "warmup": true
+        },
+        "claude-3-5-sonnet": {
+            "provider": "anthropic",
+            "model_id": "claude-3-5-sonnet-20240620",
+            "capabilities": ["creative", "writing", "refinement"],
+            "context_limit": 200000,
+            "cost_per_1k_input": 0.3,
+            "cost_per_1k_output": 1.5,
+            "latency_tier": "medium",
+            "default_timeout": 45.0,
+            "warmup": true
+        },
+        "gemini-1-5-pro": {
+            "provider": "google",
+            "model_id": "gemini-1.5-pro",
+            "capabilities": ["long-context", "research", "multimodal"],
+            "context_limit": 1000000,
+            "cost_per_1k_input": 0.35,
+            "cost_per_1k_output": 1.05,
+            "latency_tier": "medium",
+            "default_timeout": 60.0,
+            "warmup": false
+        },
+        "gemini-1-5-flash": {
+            "provider": "google",
+            "model_id": "gemini-1.5-flash",
+            "capabilities": ["bulk", "fast", "multimodal"],
+            "context_limit": 1000000,
+            "cost_per_1k_input": 0.075,
+            "cost_per_1k_output": 0.3,
+            "latency_tier": "low",
+            "default_timeout": 20.0,
+            "warmup": true
+        },
+        "deepseek-chat": {
+            "provider": "deepseek",
+            "model_id": "deepseek-chat",
+            "capabilities": ["bulk", "drafting", "cost-efficient"],
+            "context_limit": 64000,
+            "cost_per_1k_input": 0.1,
+            "cost_per_1k_output": 0.2,
+            "latency_tier": "medium",
+            "default_timeout": 40.0,
+            "warmup": false
+        },
+        "o1-mini": {
+            "provider": "openai",
+            "model_id": "o1-mini",
+            "capabilities": ["logic", "reasoning", "coding"],
+            "context_limit": 128000,
+            "cost_per_1k_input": 0.3,
+            "cost_per_1k_output": 1.2,
+            "latency_tier": "high",
+            "default_timeout": 90.0,
+            "warmup": false
+        }
+    },
+    "routing_defaults": {
+        "IDEAS": "llama-3-3-70b",
+        "quality": "claude-3-5-sonnet",
+        "SMALL_TALK": "gpt-4o-mini",
+        "CREATIVE": "claude-3-5-sonnet",
+        "LONG_FORM": "gemini-1-5-pro",
+        "STRATEGY": "o1-mini",
+        "BULK_GENERATION": "deepseek-chat",
+        "EDITING": "gpt-4o-mini"
+    },
+    "fallbacks": {
+        "llama-3-3-70b": ["deepseek-chat", "gpt-4o-mini"],
+        "claude-3-5-sonnet": ["gemini-1-5-pro", "gpt-4o-mini"],
+        "gemini-1-5-pro": ["gemini-1-5-flash", "deepseek-chat"],
+        "o1-mini": ["claude-3-5-sonnet", "gemini-1-5-pro"],
+        "groq": ["llama-3-3-70b", "deepseek-chat"],
+        "together": ["deepseek-chat", "gpt-4o-mini"],
+        "openai": ["claude-3-5-sonnet", "gemini-1-5-pro"],
+        "google": ["claude-3-5-sonnet", "gpt-4o-mini"],
+        "anthropic": ["gemini-1-5-pro", "gpt-4o-mini"]
+    }
+}

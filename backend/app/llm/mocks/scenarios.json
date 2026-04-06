@@ -1,0 +1,26 @@
+{
+  "scenarios": {
+    "viral_tech_review": {
+      "idea_discovery": {
+        "content": "{\"ideas\": [{\"title\": \"AI-Powered Gadgets 2026\", \"hook\": \"The future is here!\"}, {\"title\": \"Zero-Latency Workflows\", \"hook\": \"Stop waiting, start creating.\"}]}",
+        "usage": {"input": 50, "output": 150}
+      },
+      "script_drafting": {
+        "content": "{\"title\": \"The Future is Now\", \"body\": \"Welcome to the year 2026 where AI is everywhere...\", \"tone\": \"Enthusiastic\"}",
+        "usage": {"input": 200, "output": 800}
+      }
+    },
+    "policy_violation": {
+      "validate_inputs": {
+        "content": "{\"error\": \"unauthorized: policy violation detected\", \"score\": 95}",
+        "usage": {"input": 10, "output": 20}
+      }
+    },
+    "generic_success": {
+      "default": {
+        "content": "{\"status\": \"success\", \"message\": \"Mocked successful response\"}",
+        "usage": {"input": 10, "output": 10}
+      }
+    }
+  }
+}
