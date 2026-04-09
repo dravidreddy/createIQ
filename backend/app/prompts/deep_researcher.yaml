@@ -21,8 +21,10 @@ versions:
       - Flag anything that needs fact-checking
 
       ## Output Format
-      Return a JSON object:
+      STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE.
+      Begin with "internal_monologue" to document your deep dive analysis path.
       {
+        "internal_monologue": "Analyzing source credibility and synthesizing deep topic...",
         "research": [
           {
             "topic_area": "...",

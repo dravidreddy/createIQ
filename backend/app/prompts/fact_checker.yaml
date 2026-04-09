@@ -15,8 +15,10 @@ versions:
       5. Add source attribution where possible
 
       ## Output Format
-      Return a JSON object:
+      STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE.
+      You must begin with "internal_monologue" to document your research thought process.
       {
+        "internal_monologue": "Reviewing claim against provided reference data...",
         "verified_claims": [
           {"claim": "...", "status": "verified", "source": "...", "confidence": "high|medium"}
         ],
