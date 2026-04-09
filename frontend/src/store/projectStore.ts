@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { Project, StreamEvent, QualityMode, AgentStateResponse, JobSimulationResponse } from '../types'
-import { projectApi, agentApi, v3Api } from '../services/api'
+import { projectApi, v3Api } from '../services/api'
 
 interface ProjectState {
     projects: Project[]
@@ -24,12 +24,8 @@ interface ProjectState {
     deleteProject: (id: string) => Promise<void>
     selectIdea: (projectId: string, ideaIndex: number) => Promise<void>
 
-    // Agent actions
-    runIdeaDiscovery: (projectId: string) => Promise<void>
-    runScriptGeneration: (projectId: string) => Promise<void>
-    runScreenplayAnalysis: (projectId: string) => Promise<void>
-    runEditingImprovement: (projectId: string) => Promise<void>
-    runFullPipeline: (projectId: string) => Promise<void>
+    // Agent actions (V4 pipeline migration: use pipelineApi.start)
+    // Legacy single-stage actions removed.
 
     // V3.3 actions
     setQualityMode: (mode: QualityMode) => void
@@ -102,108 +98,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         set({ currentProject: project })
     },
 
-    runIdeaDiscovery: async (projectId: string) => {
-        set({ isLoading: true })
-        try {
-            const result = await agentApi.discoverIdeas(projectId)
-            set((state) => ({
-                currentProject: state.currentProject?.id === projectId 
-                    ? { ...state.currentProject, discovered_ideas: result.ideas } 
-                    : state.currentProject,
-                isLoading: false
-            }))
-        } catch (error) {
-            set({ isLoading: false })
-            throw error
-        }
-    },
 
-    runScriptGeneration: async (projectId: string) => {
-        set({ isLoading: true })
-        try {
-            const result = await agentApi.generateScript(projectId)
-            set((state) => ({
-                currentProject: state.currentProject?.id === projectId 
-                    ? { ...state.currentProject, generated_script: result.script?.full_script || result.script } 
-                    : state.currentProject,
-                isLoading: false
-            }))
-        } catch (error) {
-            set({ isLoading: false })
-            throw error
-        }
-    },
-
-    runScreenplayAnalysis: async (projectId: string) => {
-        set({ isLoading: true })
-        try {
-            const result = await agentApi.analyzeScreenplay(projectId)
-            set((state) => ({
-                currentProject: state.currentProject?.id === projectId 
-                    ? { ...state.currentProject, screenplay_guidance: result.guidance } 
-                    : state.currentProject,
-                isLoading: false
-            }))
-        } catch (error) {
-            set({ isLoading: false })
-            throw error
-        }
-    },
-
-    runEditingImprovement: async (projectId: string) => {
-        set({ isLoading: true })
-        try {
-            const result = await agentApi.editScript(projectId)
-            set((state) => ({
-                currentProject: state.currentProject?.id === projectId 
-                    ? { ...state.currentProject, edited_script: result.edited_script } 
-                    : state.currentProject,
-                isLoading: false
-            }))
-        } catch (error) {
-            set({ isLoading: false })
-            throw error
-        }
-    },
-
-    runFullPipeline: async (projectId: string) => {
-        set({ isLoading: true })
-        try {
-            const state = get()
-            const result = await agentApi.runPipeline(projectId, state.qualityMode, state.variantCnt)
-            
-            if (result.status === 'accepted') {
-                // Poll for background job completion
-                const interval = setInterval(async () => {
-                    try {
-                        const statusResult = await agentApi.getStatus(projectId)
-                        if (statusResult.status === 'completed' || statusResult.status === 'failed') {
-                            clearInterval(interval)
-                            await get().fetchProject(projectId)
-                            set({ isLoading: false })
-                        }
-                    } catch (e) {
-                        // ignore poll errors
-                    }
-                }, 3000)
-            } else {
-                set((state) => ({
-                    currentProject: state.currentProject?.id === projectId 
-                        ? { 
-                            ...state.currentProject, 
-                            generated_script: result.original_script,
-                            screenplay_guidance: result.screenplay_guidance,
-                            edited_script: result.final_script
-                        } 
-                        : state.currentProject,
-                    isLoading: false
-                }))
-            }
-        } catch (error) {
-            set({ isLoading: false })
-            throw error
-        }
-    },
 
     addStreamEvent: (event: StreamEvent) => {
         // Phase 1: Synchronously update state — pure reducer, no async side-effects

@@ -182,7 +182,8 @@ export type PipelineEventType =
     | 'fallback' 
     | 'node_complete'
     | 'metrics'
-    | 'thread_created';
+    | 'thread_created'
+    | 'done';
 
 export interface StreamEvent {
     type: PipelineEventType;
@@ -192,6 +193,7 @@ export interface StreamEvent {
     node?: string;
     stage?: string;
     content?: any;
+    data?: any;
     tokens?: { input: number; output: number };
     cost_cents?: number;
     model?: string;

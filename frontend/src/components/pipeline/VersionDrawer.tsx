@@ -1,14 +1,20 @@
 import { History, X, Clock, CheckCircle2 } from 'lucide-react';
 import { clsx } from 'clsx';
 
-export function VersionDrawer({ isOpen, onClose, projectId }: { isOpen: boolean, onClose: () => void, projectId: string }) {
-  // Static mock since backend VersionService is not fully wired to a stream fetch just yet
-  // Once the v4 endpoint exposes GET /pipeline/{id}/versions, this will be hydrated
-  const versions = [
-    { id: '1', date: new Date().toISOString(), title: 'Initial Draft', is_current: false, changes: 'Idea generation and script drafting.' },
-    { id: '2', date: new Date().toISOString(), title: 'Edited Polish', is_current: true, changes: 'Applied screenplay guidance and CTA.' }
-  ];
+interface VersionDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  versions: any[];
+  currentVersionId?: string;
+  onRestore: (versionId: string) => void;
+  isRestoring: boolean;
+}
 
+export function VersionDrawer({ 
+  isOpen, 
+  onClose, 
+  versions
+}: VersionDrawerProps) {
   if (!isOpen) return null;
 
   return (

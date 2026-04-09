@@ -77,12 +77,8 @@ class AuthService:
         logger.info("User authenticated: %s", email)
         return user
 
-    async def login(self, email: str, password: str) -> Optional[Token]:
-        """Login user and return JWT tokens."""
-        user = await self.authenticate_user(email, password)
-        if not user:
-            return None
-
+    async def login(self, user: User) -> Token:
+        """Create and return JWT tokens for an already authenticated user."""
         user_id = str(user.id)
         access_token, refresh_token, expires_in = create_tokens(user_id)
 

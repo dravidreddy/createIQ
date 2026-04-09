@@ -57,7 +57,7 @@ async def login(login_data: LoginRequest, response: Response):
         )
 
     # 2. Generate Tokens
-    token_data = await auth_service.login(login_data.email, login_data.password)
+    token_data = await auth_service.login(user)
     if not token_data:
          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token generation failed")
 

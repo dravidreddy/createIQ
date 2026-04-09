@@ -26,8 +26,10 @@ from app.agents.groups.strategy import series_planning_node, growth_advisory_nod
 from app.agents.sub_agents.evaluator import EvaluatorAgent
 from app.utils.context_manager import get_context_manager
 from app.utils.text import truncate_text
+from app.config import get_settings
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 
