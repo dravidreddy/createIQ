@@ -72,6 +72,10 @@ class Settings(BaseSettings):
         default=False,
         description="Set True in production behind HTTPS",
     )
+    cookie_samesite: str = Field(
+        default="lax",
+        description="Cookie SameSite attribute (lax for local, none for production cross-domain)",
+    )
 
     # ─── LLM Providers ───────────────────────────────────────────
     gemini_api_key: str = Field(default="", description="Google Gemini API key")

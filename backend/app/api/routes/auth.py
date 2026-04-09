@@ -65,7 +65,7 @@ async def login(login_data: LoginRequest, response: Response):
     # SameSite=Lax is used to allow the initial navigation but prevent CSRF on mutations
     cookie_params = {
         "httponly": True,
-        "samesite": "lax",
+        "samesite": settings.cookie_samesite,
         "secure": settings.cookie_secure,
         "path": "/",
     }
@@ -121,7 +121,7 @@ async def refresh_token(request: Request, response: Response):
 
     cookie_params = {
         "httponly": True,
-        "samesite": "lax",
+        "samesite": settings.cookie_samesite,
         "secure": settings.cookie_secure,
         "path": "/",
     }
@@ -188,11 +188,13 @@ async def logout(response: Response):
     Logout current user by clearing cookies.
     Must use exact same path and domain as set_cookie.
     """
+    settings = get_settings()
     # Use same params as login to ensure the browser identifies the correct cookie to delete
     cookie_params = {
         "path": "/",
         "httponly": True,
-        "samesite": "lax",
+        "samesite": settings.cookie_samesite,
+        "secure": settings.cookie_secure,
     }
     response.delete_cookie("access_token", **cookie_params)
     response.delete_cookie("refresh_token", **cookie_params)
