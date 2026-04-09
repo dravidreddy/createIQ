@@ -33,11 +33,17 @@ class GroqProvider(BaseLLMProvider):
         api_key: str = None, 
         model: str = None
     ):
-        self.api_key = api_key or settings.groq_api_key
-        self._model_name = model or settings.groq_model or "llama-3.3-70b-versatile"
-        self.provider_name = "groq"
+        self.api_keys = [k for k in [
+            api_key or settings.groq_api_key,
+            settings.groq_api_key_2,
+            settings.groq_api_key_3
+        ] if k]
         
-        self.client = AsyncGroq(api_key=self.api_key)
+        self.clients = [AsyncGroq(api_key=key) for key in self.api_keys]
+        if not self.clients:
+            logger.warning("No Groq API keys provided!")
+            
+        self.current_client_idx = 0
         self._semaphore = asyncio.Semaphore(20) # Groq allows high concurrency
 
     @property
@@ -64,9 +70,15 @@ class GroqProvider(BaseLLMProvider):
         groq_messages = [{"role": m.role, "content": m.content} for m in messages]
 
         try:
-            async with self._semaphore:
-                response = await asyncio.wait_for(
-                    self.client.chat.completions.create(
+        # Retry logic for api key rotation
+        max_attempts = len(self.clients)
+        
+        for attempt in range(max_attempts):
+            client = self.clients[self.current_client_idx]
+            try:
+                async with self._semaphore:
+                    response = await asyncio.wait_for(
+                        client.chat.completions.create(
                         model=self._model_name,
                         messages=groq_messages,
                         temperature=temperature,
@@ -104,11 +116,17 @@ class GroqProvider(BaseLLMProvider):
                 } for tool in response.choices[0].message.tool_calls] if response.choices[0].message.tool_calls else None
             )
 
-        except Exception as e:
-            logger.error(f"Groq error: {e}")
-            if "rate_limit" in str(e).lower():
-                raise LLMRateLimitError(str(e), provider=self.provider_name)
-            raise LLMError(f"Groq error: {str(e)}", provider=self.provider_name)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "rate limit" in error_msg or "429" in error_msg:
+                    logger.warning(f"Groq rate limit hit on key index {self.current_client_idx}, rotating...")
+                    self.current_client_idx = (self.current_client_idx + 1) % len(self.clients)
+                    if attempt == max_attempts - 1:
+                        raise LLMRateLimitError(str(e), provider=self.provider_name)
+                    continue # Try next key
+                
+                logger.error(f"Groq error: {e}")
+                raise LLMError(f"Groq error: {str(e)}", provider=self.provider_name)
 
     async def stream(
         self,
@@ -120,16 +138,20 @@ class GroqProvider(BaseLLMProvider):
         """Generate a streaming response using Groq API."""
         groq_messages = [{"role": m.role, "content": m.content} for m in messages]
 
-        try:
-            async with self._semaphore:
-                stream = await self.client.chat.completions.create(
-                    model=self._model_name,
-                    messages=groq_messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    stream=True,
-                    **{k: v for k, v in kwargs.items() if k not in ["json_mode", "tools"]}
-                )
+        # Streaming API Key Rotation
+        max_attempts = len(self.clients)
+        for attempt in range(max_attempts):
+            client = self.clients[self.current_client_idx]
+            try:
+                async with self._semaphore:
+                    stream = await client.chat.completions.create(
+                        model=self._model_name,
+                        messages=groq_messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        stream=True,
+                        **{k: v for k, v in kwargs.items() if k not in ["json_mode", "tools"]}
+                    )
                 
                 async for chunk in stream:
                     if chunk.choices[0].delta.content:
@@ -141,6 +163,16 @@ class GroqProvider(BaseLLMProvider):
                 
                 yield LLMStreamChunk(content="", is_complete=True)
 
-        except Exception as e:
-            logger.error(f"Groq streaming error: {e}")
-            raise LLMError(str(e), provider=self.provider_name)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "rate limit" in error_msg or "429" in error_msg:
+                    logger.warning(f"Groq streaming rate limit hit on key index {self.current_client_idx}, rotating...")
+                    self.current_client_idx = (self.current_client_idx + 1) % len(self.clients)
+                    if attempt == max_attempts - 1:
+                        raise LLMRateLimitError(str(e), provider=self.provider_name)
+                    continue
+                logger.error(f"Groq streaming error: {e}")
+                raise LLMError(str(e), provider=self.provider_name)
+            
+            # If we succeed, exit the loop
+            break

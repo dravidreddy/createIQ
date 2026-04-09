@@ -91,23 +91,24 @@
     },
     "routing_defaults": {
         "IDEAS": "llama-3-3-70b",
-        "quality": "claude-3-5-sonnet",
-        "SMALL_TALK": "gpt-4o-mini",
-        "CREATIVE": "claude-3-5-sonnet",
-        "LONG_FORM": "gemini-1-5-pro",
-        "STRATEGY": "o1-mini",
-        "BULK_GENERATION": "deepseek-chat",
-        "EDITING": "gpt-4o-mini"
+        "quality": "llama-3-3-70b",
+        "SMALL_TALK": "llama-3-1-8b",
+        "CREATIVE": "llama-3-3-70b",
+        "LONG_FORM": "llama-3-3-70b",
+        "STRATEGY": "llama-3-3-70b",
+        "BULK_GENERATION": "llama-3-1-8b",
+        "EDITING": "llama-3-1-8b"
     },
     "fallbacks": {
-        "llama-3-3-70b": ["deepseek-chat", "gpt-4o-mini"],
-        "claude-3-5-sonnet": ["gemini-1-5-pro", "gpt-4o-mini"],
-        "gemini-1-5-pro": ["gemini-1-5-flash", "deepseek-chat"],
-        "o1-mini": ["claude-3-5-sonnet", "gemini-1-5-pro"],
-        "groq": ["llama-3-3-70b", "deepseek-chat"],
-        "together": ["deepseek-chat", "gpt-4o-mini"],
-        "openai": ["claude-3-5-sonnet", "gemini-1-5-pro"],
-        "google": ["claude-3-5-sonnet", "gpt-4o-mini"],
-        "anthropic": ["gemini-1-5-pro", "gpt-4o-mini"]
+        "llama-3-3-70b": ["llama-3-1-8b"],
+        "llama-3-1-8b": ["llama-3-3-70b"],
+        "claude-3-5-sonnet": ["llama-3-3-70b"],
+        "gemini-1-5-pro": ["llama-3-3-70b"],
+        "o1-mini": ["llama-3-3-70b"],
+        "groq": ["llama-3-3-70b", "llama-3-1-8b"],
+        "together": ["llama-3-1-8b"],
+        "openai": ["llama-3-3-70b"],
+        "google": ["llama-3-3-70b"],
+        "anthropic": ["llama-3-3-70b"]
     }
 }

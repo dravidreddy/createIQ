@@ -84,8 +84,10 @@ versions:
       - Pacing: Short, punchy, spoken English. No "textbook" formal structures.
 
       ## Output Format
-      STRICT JSON ONLY. NO MARKDOWN.
+      STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE. NO CONVERSATION.
+      You must start with "internal_monologue" to plan the pacing and retention before the "title".
       {
+        "internal_monologue": "Plan the pacing. How do we keep them watching at the 10s mark? 30s mark?",
         "title": "Viral Hooky Title",
         "hook_block": {
           "text": "The Opening Capture",

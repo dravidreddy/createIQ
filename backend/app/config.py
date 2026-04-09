@@ -84,6 +84,8 @@ class Settings(BaseSettings):
     deepseek_api_key: str = Field(default="", description="DeepSeek API key")
     together_api_key: str = Field(default="", description="Together AI API key")
     groq_api_key: str = Field(default="", description="Groq API key")
+    groq_api_key_2: str = Field(default="", description="Groq fallback API key 2")
+    groq_api_key_3: str = Field(default="", description="Groq fallback API key 3")
 
     # ─── Global Overrides ────────────────────────────────────────
     llm_provider: Optional[str] = Field(default=None, description="Global LLM provider override (e.g. groq)")
@@ -182,11 +184,8 @@ class Settings(BaseSettings):
     def validate_config(self):
         """Raise error if critical keys are missing or misconfigured in any environment."""
         critical_keys = {
-            "OPENAI_API_KEY": self.openai_api_key,
-            "GEMINI_API_KEY": self.gemini_api_key,
+        critical_keys = {
             "GROQ_API_KEY": self.groq_api_key,
-            "ANTHROPIC_API_KEY": self.anthropic_api_key,
-            "TAVILY_API_KEY": self.tavily_api_key,
             "MONGO_URI": self.mongo_uri,
             "REDIS_URL": self.redis_url,
             "QDRANT_URL": self.qdrant_url,

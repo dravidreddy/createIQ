@@ -93,8 +93,8 @@ class TrendResearcherAgent(BaseAgentExecutor):
             LLMMessage(role="user", content=f"{user_prompt}\n\n## Search Results:\n{search_context}"),
         ]
 
-        # Prune total message history
-        messages = pruner.prune_messages(messages, max_tokens=128000)
+        # Prune total message history for Groq's 32k limit
+        messages = pruner.prune_messages(messages, max_tokens=28000)
 
         response = await self.llm_generate(messages, task_type="quality")
         
