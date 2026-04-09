@@ -1,4 +1,4 @@
-﻿aiohappyeyeballs==2.6.1
+aiohappyeyeballs==2.6.1
 aiohttp==3.13.3
 aiosignal==1.4.0
 aiosqlite==0.22.1
@@ -107,7 +107,6 @@ pytest-cov==7.1.0
 python-dotenv==1.2.2
 python-jose==3.5.0
 python-multipart==0.0.22
-pywin32==311
 PyYAML==6.0.3
 qdrant-client==1.17.1
 redis==7.4.0
