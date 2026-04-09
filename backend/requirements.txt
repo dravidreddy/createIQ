@@ -6,7 +6,7 @@ annotated-doc==0.0.4
 annotated-types==0.7.0
 anthropic==0.89.0
 anyio==4.12.1
-arq==0.27.0
+arq
 attrs==26.1.0
 backoff==2.2.1
 bcrypt==3.2.0
@@ -109,7 +109,7 @@ python-jose==3.5.0
 python-multipart==0.0.22
 PyYAML==6.0.3
 qdrant-client==1.17.1
-redis==7.4.0
+redis
 regex==2026.2.28
 requests==2.33.0
 requests-toolbelt==1.0.0
