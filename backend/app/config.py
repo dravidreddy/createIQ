@@ -184,7 +184,6 @@ class Settings(BaseSettings):
     def validate_config(self):
         """Raise error if critical keys are missing or misconfigured in any environment."""
         critical_keys = {
-        critical_keys = {
             "GROQ_API_KEY": self.groq_api_key,
             "MONGO_URI": self.mongo_uri,
             "REDIS_URL": self.redis_url,
