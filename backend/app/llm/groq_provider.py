@@ -70,63 +70,65 @@ class GroqProvider(BaseLLMProvider):
         groq_messages = [{"role": m.role, "content": m.content} for m in messages]
 
         try:
-        # Retry logic for api key rotation
-        max_attempts = len(self.clients)
-        
-        for attempt in range(max_attempts):
-            client = self.clients[self.current_client_idx]
-            try:
-                async with self._semaphore:
-                    response = await asyncio.wait_for(
-                        client.chat.completions.create(
-                        model=self._model_name,
-                        messages=groq_messages,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                        response_format={"type": "json_object"} if kwargs.get("json_mode") else None,
-                        **{k: v for k, v in kwargs.items() if k not in [
-                            "json_mode", "tools", "execution_trace", "trace_id", 
-                            "current_budget_cents", "project_budget_limit", 
-                            "priority", "task_type", "project_id"
-                        ]}
-                    ),
-                    timeout=30.0
-                )
+            # Retry logic for api key rotation
+            max_attempts = len(self.clients)
             
-            latency_ms = (time.perf_counter() - start_time) * 1000
-            
-            return LLMResponse(
-                content=response.choices[0].message.content or "",
-                input_tokens=response.usage.prompt_tokens,
-                output_tokens=response.usage.completion_tokens,
-                latency_ms=latency_ms,
-                model=self._model_name,
-                model_path=f"groq/{self._model_name}",
-                finish_reason=response.choices[0].finish_reason,
-                provider_metadata={
-                    "id": response.id,
-                },
-                tool_calls=[{
-                    "id": tool.id,
-                    "type": "function",
-                    "function": {
-                        "name": tool.function.name,
-                        "arguments": tool.function.arguments
-                    }
-                } for tool in response.choices[0].message.tool_calls] if response.choices[0].message.tool_calls else None
-            )
-
-            except Exception as e:
-                error_msg = str(e).lower()
-                if "rate limit" in error_msg or "429" in error_msg:
-                    logger.warning(f"Groq rate limit hit on key index {self.current_client_idx}, rotating...")
-                    self.current_client_idx = (self.current_client_idx + 1) % len(self.clients)
-                    if attempt == max_attempts - 1:
-                        raise LLMRateLimitError(str(e), provider=self.provider_name)
-                    continue # Try next key
+            for attempt in range(max_attempts):
+                client = self.clients[self.current_client_idx]
+                try:
+                    async with self._semaphore:
+                        response = await asyncio.wait_for(
+                            client.chat.completions.create(
+                            model=self._model_name,
+                            messages=groq_messages,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                            response_format={"type": "json_object"} if kwargs.get("json_mode") else None,
+                            **{k: v for k, v in kwargs.items() if k not in [
+                                "json_mode", "tools", "execution_trace", "trace_id", 
+                                "current_budget_cents", "project_budget_limit", 
+                                "priority", "task_type", "project_id"
+                            ]}
+                        ),
+                        timeout=30.0
+                    )
                 
-                logger.error(f"Groq error: {e}")
-                raise LLMError(f"Groq error: {str(e)}", provider=self.provider_name)
+                    latency_ms = (time.perf_counter() - start_time) * 1000
+                    
+                    return LLMResponse(
+                        content=response.choices[0].message.content or "",
+                        input_tokens=response.usage.prompt_tokens,
+                        output_tokens=response.usage.completion_tokens,
+                        latency_ms=latency_ms,
+                        model=self._model_name,
+                        model_path=f"groq/{self._model_name}",
+                        finish_reason=response.choices[0].finish_reason,
+                        provider_metadata={
+                            "id": response.id,
+                        },
+                        tool_calls=[{
+                            "id": tool.id,
+                            "type": "function",
+                            "function": {
+                                "name": tool.function.name,
+                                "arguments": tool.function.arguments
+                            }
+                        } for tool in response.choices[0].message.tool_calls] if response.choices[0].message.tool_calls else None
+                    )
+
+                except Exception as e:
+                    error_msg = str(e).lower()
+                    if "rate limit" in error_msg or "429" in error_msg:
+                        logger.warning(f"Groq rate limit hit on key index {self.current_client_idx}, rotating...")
+                        self.current_client_idx = (self.current_client_idx + 1) % len(self.clients)
+                        if attempt == max_attempts - 1:
+                            raise LLMRateLimitError(str(e), provider=self.provider_name)
+                        continue # Try next key
+                    
+                    logger.error(f"Groq error: {e}")
+                    raise LLMError(f"Groq error: {str(e)}", provider=self.provider_name)
+        except Exception as e:
+            raise LLMError(f"Groq generate failed: {str(e)}", provider=self.provider_name)
 
     async def stream(
         self,
