@@ -50,10 +50,6 @@ export default function Dashboard() {
         }
     }
 
-    const handleVoiceInput = (text: string) => {
-        setTopic(prev => prev ? `${prev} ${text}` : text)
-    }
-
     const recentProjects = projects.slice(0, 3)
 
     return (

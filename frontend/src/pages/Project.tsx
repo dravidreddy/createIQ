@@ -104,12 +104,6 @@ export default function Project() {
         }
     };
 
-    const handleVoiceInput = (text: string) => {
-        setInstruction(text);
-        // Optionally auto-submit voice input
-        // handleFeedback(text);
-    };
-
     return (
         <div className="min-h-screen bg-bg flex flex-col pt-16 pb-32">
             {/* Minimal Header */}
