@@ -1,13 +1,18 @@
 import axios from 'axios'
 import { User, Profile, Project, ProfileCreate } from '../types'
 
-const getBaseUrl = () => {
-    if ((import.meta as any).env?.VITE_API_URL) {
-        return (import.meta as any).env.VITE_API_URL
+export const getBaseUrl = () => {
+    let url = (import.meta as any).env?.VITE_API_URL;
+    if (url) {
+        // Auto-append /api/v1 if the user provided the bare Northflank domain
+        if (!url.endsWith('/api/v1')) {
+            url = url.replace(/\/$/, '') + '/api/v1';
+        }
+        return url;
     }
     // Fallback to current browser host to ensure Same-Site cookie compatibility (localhost vs 127.0.0.1)
-    const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1'
-    return `http://${host}:8000/api/v1`
+    const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
+    return `http://${host}:8000/api/v1`;
 }
 
 const API_URL = getBaseUrl()

@@ -3,6 +3,7 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useStreamingStore } from '../store/streamingStore';
 import { useProjectStore } from '../store/projectStore';
 import { StreamEvent } from '../types';
+import { getBaseUrl } from '../services/api';
 
 export const usePipelineStream = () => {
   const { 
@@ -179,7 +180,7 @@ export const usePipelineStream = () => {
     ctrlRef.current = ctrl;
 
     const token = localStorage.getItem('token');
-    const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://127.0.0.1:8000';
+    const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
 
     try {
       await fetchEventSource(`${API_BASE}/api/v1/pipeline/start`, {
@@ -241,7 +242,7 @@ export const usePipelineStream = () => {
     ctrlRef.current = ctrl;
 
     const token = localStorage.getItem('token');
-    const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://127.0.0.1:8000';
+    const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
 
     try {
       await fetchEventSource(`${API_BASE}/api/v1/pipeline/${threadId}/resume`, {
@@ -281,7 +282,7 @@ export const usePipelineStream = () => {
   }, []);
 
   const checkPipelineStatus = useCallback(async (threadId: string, lastSeq?: number) => {
-    const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://127.0.0.1:8000';
+    const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
     const token = localStorage.getItem('token');
     const url = lastSeq !== undefined 
         ? `${API_BASE}/api/v1/pipeline/${threadId}/status?last_seq=${lastSeq}`
