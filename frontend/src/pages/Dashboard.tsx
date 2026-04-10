@@ -84,14 +84,14 @@ export default function Dashboard() {
                             }}
                         />
                         
-                        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
-                            <div className="flex items-center gap-4">
-                                <PlatformSelector selected={platform} onChange={setPlatform} />
-                                <div className="h-6 w-[1px] bg-white/5" />
-                                <ModeToggle mode={mode} onChange={setMode} />
-                                <div className="h-6 w-[1px] bg-white/5" />
-                                <MicButton onTranscription={handleVoiceInput} />
-                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <PlatformSelector selected={platform} onChange={setPlatform} />
+                                    <div className="h-6 w-[1px] bg-white/5" />
+                                    <ModeToggle mode={mode} onChange={setMode} />
+                                    <div className="h-6 w-[1px] bg-white/5" />
+                                    <MicButton onTranscription={(text) => setTopic(text)} currentText={topic} />
+                                </div>
 
                             <button
                                 onClick={handleCreate}
