@@ -29,7 +29,11 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from JSON string and filter localhost in production."""
-        origins = json.loads(self.cors_origins)
+        try:
+            origins = json.loads(self.cors_origins) if self.cors_origins else []
+        except (json.JSONDecodeError, TypeError):
+            # Fallback: treat as comma-separated string or single origin
+            origins = [o.strip() for o in self.cors_origins.split(",") if o.strip()] if self.cors_origins else []
         if self.env.lower() == "prod":
             # Filter out localhost and 127.0.0.1 for production
             origins = [o for o in origins if "localhost" not in o and "127.0.0.1" not in o]
