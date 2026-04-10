@@ -34,6 +34,8 @@ class Settings(BaseSettings):
         except (json.JSONDecodeError, TypeError):
             # Fallback: treat as comma-separated string or single origin
             origins = [o.strip() for o in self.cors_origins.split(",") if o.strip()] if self.cors_origins else []
+        # Strip trailing slashes — CORS matching is strict
+        origins = [o.rstrip("/") for o in origins]
         if self.env.lower() == "prod":
             # Filter out localhost and 127.0.0.1 for production
             origins = [o for o in origins if "localhost" not in o and "127.0.0.1" not in o]

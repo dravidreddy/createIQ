@@ -33,6 +33,7 @@ class GroqProvider(BaseLLMProvider):
         api_key: str = None, 
         model: str = None
     ):
+        self._model_name = model or "llama-3.3-70b-versatile"
         self.api_keys = [k for k in [
             api_key or settings.groq_api_key,
             settings.groq_api_key_2,
