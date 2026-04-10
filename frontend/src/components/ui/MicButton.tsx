@@ -27,6 +27,14 @@ export const MicButton: React.FC<MicButtonProps> = ({
   const recognitionRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>('');
   const baselineTextRef = useRef<string>('');
+  
+  const currentTextRef = useRef(currentText);
+  const onTranscriptionRef = useRef(onTranscription);
+
+  useEffect(() => {
+    currentTextRef.current = currentText;
+    onTranscriptionRef.current = onTranscription;
+  }, [currentText, onTranscription]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -39,8 +47,7 @@ export const MicButton: React.FC<MicButtonProps> = ({
       recognition.onstart = () => {
         setIsRecording(true);
         finalTranscriptRef.current = '';
-        // Capture the text that was in the input just before we started talking
-        baselineTextRef.current = currentText.trim();
+        baselineTextRef.current = currentTextRef.current.trim();
       };
 
       recognition.onresult = (event: any) => {
@@ -61,11 +68,10 @@ export const MicButton: React.FC<MicButtonProps> = ({
         
         let liveTranscript = (finalTranscriptRef.current + interimTranscript).trim();
         
-        // Output combined baseline text + new live transcription
         if (baselineTextRef.current) {
-            onTranscription(`${baselineTextRef.current} ${liveTranscript}`);
+            onTranscriptionRef.current(`${baselineTextRef.current} ${liveTranscript}`);
         } else {
-            onTranscription(liveTranscript);
+            onTranscriptionRef.current(liveTranscript);
         }
       };
 
@@ -95,7 +101,7 @@ export const MicButton: React.FC<MicButtonProps> = ({
             recognitionRef.current.abort();
         }
     };
-  }, [onTranscription, currentText]);
+  }, []); // Empty dependency array prevents restarting recognition on every render
 
   const startRecording = () => {
     if (!recognitionRef.current) {

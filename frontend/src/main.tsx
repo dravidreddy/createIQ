@@ -10,7 +10,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Toaster
             position="top-right"
             toastOptions={{
-                className: 'dark:bg-surface-800 dark:text-white',
+                style: {
+                    background: '#1e293b', /* slate-800 for dark mode */
+                    color: '#f8fafc',      /* slate-50 for high contrast */
+                    border: '1px solid rgba(255,255,255,0.1)'
+                },
                 duration: 4000,
             }}
         />

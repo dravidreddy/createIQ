@@ -93,6 +93,12 @@ export default function Project() {
 
     const handleFeedback = async (text?: string) => {
         const feedback = text || instruction;
+
+        if (status === 'idle') {
+            await handleStart();
+            return;
+        }
+
         if (!feedback.trim() || !threadId) return;
 
         try {
