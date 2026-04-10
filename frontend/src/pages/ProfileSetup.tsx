@@ -157,6 +157,7 @@ export default function ProfileSetup() {
                                 {NICHES.map((niche) => (
                                     <button
                                         key={niche}
+                                        type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, content_niche: niche }))}
                                         className={clsx(
                                             'px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all',
@@ -195,6 +196,7 @@ export default function ProfileSetup() {
                                 {PLATFORMS.map(({ value, label, icon: Icon }) => (
                                     <button
                                         key={value}
+                                        type="button"
                                         onClick={() => togglePlatform(value)}
                                         className={clsx(
                                             'flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left transition-all',
@@ -232,6 +234,7 @@ export default function ProfileSetup() {
                                 {STYLES.map((style) => (
                                     <button
                                         key={style}
+                                        type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, content_style: style }))}
                                         className={clsx(
                                             'px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all',
@@ -251,6 +254,7 @@ export default function ProfileSetup() {
                                     {LENGTHS.map((length) => (
                                         <button
                                             key={length}
+                                            type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, typical_video_length: length }))}
                                             className={clsx(
                                                 'px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all',
