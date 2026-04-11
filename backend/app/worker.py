@@ -3,16 +3,16 @@ import logging
 import json
 import signal
 import time
-import redis.asyncio as redis
 from typing import Any, Dict, Optional, List
-from taskiq import TaskiqScheduler
 from taskiq_redis import ListQueueBroker
 from langchain_core.messages import AIMessageChunk
 
 from app.config import get_settings
 from app.models.database import init_db, close_db
 from app.models.infrastructure import get_redis, init_infrastructure, close_infrastructure
-from app.pipeline.graph import get_graph
+# NOTE: get_graph is NOT imported at module level intentionally.
+# Importing it here would trigger MongoDBCheckpointer() before init_db() runs,
+# causing the worker to hang at startup. It is imported lazily inside the task.
 from app.pipeline.streaming import (
     format_state_update_as_sse,
     interrupt_event,
@@ -30,14 +30,27 @@ from app.pipeline.streaming import (
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
-# Initialize TaskIQ Redis Broker
-broker = ListQueueBroker(settings.redis_url)
+
+def _build_broker_url() -> str:
+    """Build a fully-qualified rediss:// URL for the TaskIQ broker from settings."""
+    url = settings.redis_url
+    # If it's a raw hostname:port, prepend rediss:// for Upstash TLS
+    if not url.startswith("redis://") and not url.startswith("rediss://"):
+        url = f"rediss://{url}"
+    # Enforce TLS for Upstash cloud
+    if ".upstash.io" in url and url.startswith("redis://"):
+        url = url.replace("redis://", "rediss://", 1)
+    return url
+
+
+# Initialize TaskIQ Redis Broker with a valid scheme URL
+broker = ListQueueBroker(_build_broker_url())
 
 # Generic Redis client (Upstash) — initialized lazily
 def get_worker_redis():
     return get_redis()
 
-redis_client = None # Will be retrieved inside tasks
+redis_client = None  # Will be retrieved inside tasks
 
 @broker.task(task_name="run_pipeline")
 async def run_pipeline_task(
@@ -49,6 +62,8 @@ async def run_pipeline_task(
     Executes the LangGraph pipeline in a worker process with production-hardened streaming.
     Uses Redis-based atomic sequencing, token batching, and heartbeats.
     """
+    # Lazy import — avoids triggering MongoDBCheckpointer before init_db() completes
+    from app.pipeline.graph import get_graph
     graph = get_graph()
     config = {"configurable": {"thread_id": thread_id}}
     if checkpoint_id:
