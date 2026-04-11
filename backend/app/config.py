@@ -74,14 +74,19 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     # ─── Cookie security ─────────────────────────────────────────
-    cookie_secure: bool = Field(
-        default=False,
-        description="Set True in production behind HTTPS",
-    )
-    cookie_samesite: str = Field(
-        default="lax",
-        description="Cookie SameSite attribute (lax for local, none for production cross-domain)",
-    )
+    # These are computed from `env` at runtime — no env var needed.
+    # Production (cross-domain Cloudflare→Fly.io): SameSite=None + Secure=True
+    # Dev (same localhost): SameSite=Lax + Secure=False
+
+    @property
+    def cookie_secure(self) -> bool:
+        """HTTPS-only cookies in production."""
+        return self.env.lower() == "prod"
+
+    @property
+    def cookie_samesite(self) -> str:
+        """SameSite=None is required for cross-domain cookie propagation in production."""
+        return "none" if self.env.lower() == "prod" else "lax"
 
     # ─── LLM Providers ───────────────────────────────────────────
     gemini_api_key: str = Field(default="", description="Google Gemini API key")

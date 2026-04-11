@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
 import { useStreamingStore } from '../store/streamingStore';
 import { usePipelineStream } from '../hooks/usePipelineStream';
+import { useInactivityTimeout } from '../hooks/useInactivityTimeout';
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -25,6 +26,9 @@ export default function Project() {
     const { currentProject, isLoading, fetchProject, updateProject } = useProjectStore();
     const { status, streamedContent, threadId } = useStreamingStore();
     const { startPipeline, resumePipeline, checkPipelineStatus } = usePipelineStream();
+
+    // Pause pipeline streams after 10 minutes of user inactivity
+    useInactivityTimeout();
 
     const [platform, setPlatform] = useState<Platform>('youtube');
     const [mode, setMode] = useState<ExecutionMode>('auto');

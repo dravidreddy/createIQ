@@ -186,7 +186,8 @@ export const usePipelineStream = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream'
+          'Accept': 'text/event-stream',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         credentials: 'include',
         body: JSON.stringify({ project_id: projectId, topic, ...options }),
@@ -240,6 +241,9 @@ export const usePipelineStream = () => {
     const ctrl = new AbortController();
     ctrlRef.current = ctrl;
 
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+
     const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
 
     try {
@@ -247,13 +251,24 @@ export const usePipelineStream = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream'
+          'Accept': 'text/event-stream',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         credentials: 'include',
         body: JSON.stringify({ action, stage, ...contentData }),
         signal: ctrl.signal,
+        async onopen(response) {
+          if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+              setStatus('error');
+              setError('Session expired. Please log in again.');
+              throw new Error(`Auth failed: ${response.status}`);
+            }
+          }
+        },
         onmessage(msg) {
           if (!msg.data) return;
+          retryCount = 0; // Reset on successful message
           try {
             processEvent(JSON.parse(msg.data));
           } catch (e) {
@@ -263,11 +278,22 @@ export const usePipelineStream = () => {
         onclose() {
           const currentStatus = useStreamingStore.getState().status;
           if (currentStatus === 'running') setStatus('done');
+        },
+        onerror(err) {
+          retryCount++;
+          if (retryCount >= MAX_RETRIES) {
+            setStatus('error');
+            setError('Pipeline connection failed after multiple retries.');
+            throw err; // Stop retrying
+          }
+          // Allow fetchEventSource to retry with backoff
+          console.warn(`Resume stream error (attempt ${retryCount}/${MAX_RETRIES}):`, err);
         }
       });
     } catch (err) {
       console.error(err);
-      setStatus('error');
+      const currentStatus = useStreamingStore.getState().status;
+      if (currentStatus !== 'error') setStatus('error');
     }
   }, [setStatus, setInterruptContext, setActiveAgent, setError, processEvent]);
 
