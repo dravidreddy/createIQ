@@ -153,7 +153,7 @@ export default function ProfileSetup() {
                                 <p className="text-surface-500 text-sm">Select the category that best describes your content</p>
                             </div>
 
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {NICHES.map((niche) => (
                                     <button
                                         key={niche}
@@ -257,9 +257,9 @@ export default function ProfileSetup() {
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, typical_video_length: length }))}
                                             className={clsx(
-                                                'px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all',
+                                                'px-2 sm:px-4 py-3 rounded-lg border-2 text-[13px] sm:text-sm font-medium transition-all break-words whitespace-normal',
                                                 formData.typical_video_length === length
-                                                    ? 'border-accent-500 bg-accent-50 dark:bg-accent-500/20 text-accent-600 dark:text-accent-400'
+                                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400'
                                                     : 'border-surface-200 dark:border-surface-700 hover:border-surface-300'
                                             )}
                                         >

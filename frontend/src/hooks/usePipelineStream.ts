@@ -187,9 +187,9 @@ export const usePipelineStream = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          'Accept': 'text/event-stream'
         },
+        credentials: 'include',
         body: JSON.stringify({ project_id: projectId, topic, ...options }),
         signal: ctrl.signal,
         async onopen(response) {
@@ -249,9 +249,9 @@ export const usePipelineStream = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          'Accept': 'text/event-stream'
         },
+        credentials: 'include',
         body: JSON.stringify({ action, stage, ...contentData }),
         signal: ctrl.signal,
         onmessage(msg) {
@@ -290,9 +290,9 @@ export const usePipelineStream = () => {
 
     try {
       const res = await fetch(url, {
+        credentials: 'include',
         headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            'Content-Type': 'application/json'
         }
       });
       if (res.ok) {
