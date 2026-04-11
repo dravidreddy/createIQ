@@ -102,7 +102,7 @@ export default function Project() {
         if (!feedback.trim() || !threadId) return;
 
         try {
-            await resumePipeline(threadId, 'feedback', currentProject.status, { feedback });
+            await resumePipeline(threadId, 'edit', currentProject.status, { feedback });
             setInstruction('');
             toast.success('Instruction sent');
         } catch (err) {

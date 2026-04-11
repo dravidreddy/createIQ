@@ -43,6 +43,7 @@ class ProjectUpdate(BaseModel):
     status: Optional[ProjectStatus] = None
     platform: Optional[str] = None
     goal: Optional[str] = None
+    parent_project_id: Optional[str] = None
 
 class ProjectResponse(BaseModel):
     """Schema for project API responses."""
