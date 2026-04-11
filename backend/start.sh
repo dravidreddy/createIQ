@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Start the TaskIQ background worker
+# Start the TaskIQ background worker (Limit to 1 process to avoid Docker OOM kill)
 echo "Starting TaskIQ Background Worker..."
-taskiq worker app.worker:broker &
+taskiq worker app.worker:broker -w 1 --max-async-tasks 20 &
 WORKER_PID=$!
 
 # Start the Uvicorn FastAPI web server
