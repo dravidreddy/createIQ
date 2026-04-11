@@ -332,14 +332,14 @@ class ExecutionLayer:
                 logger.error(f"[{request_id}] ExecutionLayer: {name} failed validation: {e}")
                 await self.router.record_failure(name)
                 last_error = e
-                break # Failed validation => move to next provider
+                continue # Try next provider in fallback chain
 
             except Exception as e:
                 execution_trace.append(f"llm_call_failed:{name}:error:{type(e).__name__}")
                 last_error = e
                 logger.error(f"[{request_id}] ExecutionLayer: Error on {name}: {e}")
                 await self.router.record_failure(name)
-                break
+                continue # Try next provider in fallback chain
             
             if name != providers_to_try[-1]:
                 execution_trace.append(f"fallback_triggered:{name}->{providers_to_try[providers_to_try.index(name)+1]}")
