@@ -52,15 +52,16 @@ def get_worker_redis():
 
 redis_client = None  # Will be retrieved inside tasks
 
-@broker.task(task_name="run_pipeline")
-async def run_pipeline_task(
+
+async def run_pipeline_async(
     thread_id: str,
     initial_state: Optional[Dict[str, Any]] = None,
     checkpoint_id: Optional[str] = None
 ) -> None:
     """
-    Executes the LangGraph pipeline in a worker process with production-hardened streaming.
-    Uses Redis-based atomic sequencing, token batching, and heartbeats.
+    Core pipeline execution logic — runs as an asyncio background task inside uvicorn.
+    This function is called directly via asyncio.create_task() from the API routes,
+    eliminating the need for a separate TaskIQ worker process.
     """
     # Lazy import — avoids triggering MongoDBCheckpointer before init_db() completes
     from app.pipeline.graph import get_graph
@@ -264,6 +265,17 @@ async def run_pipeline_task(
             heartbeat_task.cancel()
             
         logger.info(f"Worker: Finished pipeline for thread {thread_id}")
+
+
+@broker.task(task_name="run_pipeline")
+async def run_pipeline_task(
+    thread_id: str,
+    initial_state: Optional[Dict[str, Any]] = None,
+    checkpoint_id: Optional[str] = None
+) -> None:
+    """TaskIQ wrapper — delegates to run_pipeline_async for backward compat with queued tasks."""
+    await run_pipeline_async(thread_id, initial_state, checkpoint_id)
+
 
 @broker.task(task_name="run_shadow_generation")
 async def run_shadow_generation_task(

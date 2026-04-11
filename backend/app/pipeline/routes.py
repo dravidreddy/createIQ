@@ -26,7 +26,7 @@ from app.pipeline.streaming import (
     stream_start_event,
 )
 from app.config import get_settings
-from app.worker import run_pipeline_task
+from app.worker import run_pipeline_async
 from app.schemas.base import CreatorResponse, wrap_response
 
 logger = logging.getLogger(__name__)
@@ -128,8 +128,8 @@ async def start_pipeline(
     thread_id = f"{body.project_id}:{uuid4()}"
     initial_state = _build_initial_state(body, current_user, request_id, thread_id)
 
-    await run_pipeline_task.kiq(thread_id=thread_id, initial_state=initial_state)
-    logger.info(f"Enqueued job for thread {thread_id} [Req: {request_id}]")
+    asyncio.create_task(run_pipeline_async(thread_id=thread_id, initial_state=initial_state))
+    logger.info(f"Launched pipeline background task for thread {thread_id} [Req: {request_id}]")
 
     async def event_generator():
         if not settings.redis_url:
@@ -236,7 +236,7 @@ async def resume_pipeline(
             update["selected_hook"] = body.selected_content
 
     await graph.aupdate_state(config, update)
-    await run_pipeline_task.kiq(thread_id=thread_id, initial_state={"request_id": request_id})
+    asyncio.create_task(run_pipeline_async(thread_id=thread_id, initial_state={"request_id": request_id}))
 
     async def event_generator():
         if not settings.redis_url:
