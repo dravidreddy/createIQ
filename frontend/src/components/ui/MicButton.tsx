@@ -127,7 +127,7 @@ export const MicButton: React.FC<MicButtonProps> = ({
       onClick={isRecording ? stopRecording : startRecording}
       disabled={disabled}
       className={clsx(
-        "relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300",
+        "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
         isRecording 
           ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" 
           : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg",
@@ -137,9 +137,9 @@ export const MicButton: React.FC<MicButtonProps> = ({
       title={isRecording ? "Stop Recording" : "Voice Input"}
     >
       {isRecording ? (
-        <Square className="w-5 h-5 fill-current" />
+        <Square className="w-6 h-6 fill-current" />
       ) : (
-        <Mic className="w-5 h-5" />
+        <Mic className="w-6 h-6" />
       )}
       
       {isRecording && (

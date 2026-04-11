@@ -249,18 +249,18 @@ export default function Project() {
             </main>
 
             {/* Instruction Bar (Fixed Bottom) */}
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 z-50">
-                <div className="relative flex items-center p-2 bg-elevated/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden group">
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[700px] px-6 z-50">
+                <div className="relative flex items-center p-3 bg-elevated/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden group">
                     <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
                     <input 
                         value={instruction}
                         onChange={(e) => setInstruction(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleFeedback()}
                         placeholder={`Tell AI to refine the ${currentStage}...`}
-                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-4 placeholder:text-text-secondary/50"
+                        className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-base font-medium px-4 placeholder:text-text-secondary/50"
                         data-testid="pipeline-instruction"
                     />
-                    <div className="flex items-center gap-2 pr-2">
+                    <div className="flex items-center gap-3 pr-2">
                         <MicButton 
                             onTranscription={(text) => setInstruction(text)} 
                             currentText={instruction}
@@ -269,10 +269,9 @@ export default function Project() {
                         <button 
                             onClick={() => handleFeedback()}
                             disabled={!instruction.trim() || status === 'running'}
-                            className="p-2 bg-accent text-bg rounded-xl hover:bg-accent-hover transition-all disabled:opacity-30"
-                            data-testid="submit-instruction"
+                            className="p-3 bg-accent text-bg rounded-xl hover:bg-accent-hover transition-all disabled:opacity-30"
                         >
-                            <Sparkles className="w-4 h-4 fill-current" />
+                            <Sparkles className="w-5 h-5 fill-current" />
                         </button>
                     </div>
                 </div>

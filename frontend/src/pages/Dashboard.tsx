@@ -71,7 +71,7 @@ export default function Dashboard() {
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             placeholder="I want to create a video about..."
-                            className="w-full bg-transparent text-2xl font-medium placeholder:text-text-secondary/30 border-none focus:ring-0 resize-none min-h-[120px]"
+                            className="w-full bg-transparent text-2xl font-medium placeholder:text-text-secondary/30 border-none focus:ring-0 focus:outline-none resize-none min-h-[120px]"
                             data-testid="dashboard-topic-input"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
