@@ -17,6 +17,7 @@ export default function Settings() {
     const [profile, setProfile] = useState<Profile | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [activeTab, setActiveTab] = useState<'persona' | 'account' | 'security' | 'connections'>('persona')
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -92,21 +93,28 @@ export default function Settings() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                {/* Sidebar Navigation (Visual Only for now) */}
                 <div className="space-y-2">
-                    <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg bg-accent/5 text-accent text-sm font-semibold transition-all">
+                    <button 
+                        onClick={() => setActiveTab('persona')}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'persona' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
                         <Sparkles className="w-4 h-4" />
                         AI Persona
                     </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 text-sm font-semibold transition-all">
+                    <button 
+                        onClick={() => setActiveTab('account')}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'account' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
                         <User className="w-4 h-4" />
                         Account
                     </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 text-sm font-semibold transition-all">
+                    <button 
+                        onClick={() => setActiveTab('security')}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'security' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
                         <Shield className="w-4 h-4" />
                         Security
                     </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 text-sm font-semibold transition-all">
+                    <button 
+                        onClick={() => setActiveTab('connections')}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'connections' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
                         <Globe className="w-4 h-4" />
                         Connections
                     </button>
@@ -114,7 +122,8 @@ export default function Settings() {
 
                 <div className="md:col-span-2 space-y-12">
                     {/* Account Section */}
-                    <section className="space-y-6">
+                    {activeTab === 'account' && (
+                    <section className="space-y-6 animate-fade-in">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
                             Identity
                         </div>
@@ -125,7 +134,7 @@ export default function Settings() {
                                     <input
                                         type="text"
                                         value={user?.display_name || ''}
-                                        className="w-full bg-white/2 border-white/5 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                        className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                         disabled
                                         data-testid="settings-display-name"
                                     />
@@ -135,7 +144,7 @@ export default function Settings() {
                                     <input
                                         type="email"
                                         value={user?.email || ''}
-                                        className="w-full bg-white/2 border-white/5 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                        className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                         disabled
                                         data-testid="settings-email"
                                     />
@@ -143,10 +152,11 @@ export default function Settings() {
                             </div>
                         </div>
                     </section>
+                    )}
 
                     {/* Creator Profile */}
-                    {profile && (
-                        <section className="space-y-6">
+                    {activeTab === 'persona' && profile && (
+                        <section className="space-y-6 animate-fade-in">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
                                     AI Orchestration
@@ -172,13 +182,13 @@ export default function Settings() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary font-mono">Domain Niche</label>
-                                        <div className="bg-white/2 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-text-primary font-medium">
+                                        <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary font-medium">
                                             {profile.content_niche}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary font-mono">Content Tone</label>
-                                        <div className="bg-white/2 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-text-primary font-medium">
+                                        <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary font-medium">
                                             {profile.content_style}
                                         </div>
                                     </div>
@@ -190,7 +200,7 @@ export default function Settings() {
                                         type="text"
                                         value={profile.target_audience || ''}
                                         onChange={(e) => setProfile({ ...profile, target_audience: e.target.value })}
-                                        className="w-full bg-white/2 border-white/5 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                        className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
                                         placeholder="Target demographic, pain points, interests..."
                                         data-testid="settings-audience-input"
                                     />
@@ -201,12 +211,23 @@ export default function Settings() {
                                     <textarea
                                         value={profile.additional_context || ''}
                                         onChange={(e) => setProfile({ ...profile, additional_context: e.target.value })}
-                                        className="w-full bg-white/2 border-white/5 rounded-lg px-4 py-6 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20 min-h-[160px] resize-none leading-relaxed"
+                                        className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-6 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20 min-h-[160px] resize-none leading-relaxed"
                                         placeholder="Input specific rules, preferred phrases, or structural requirements for the AI to follow..."
                                         data-testid="settings-context-textarea"
                                     />
                                 </div>
                             </div>
+                        </section>
+                    )}
+
+                    {/* Placeholder Views for uncompleted tabs */}
+                    {(activeTab === 'security' || activeTab === 'connections') && (
+                        <section className="flex flex-col items-center justify-center p-12 card-minimal text-center animate-fade-in">
+                            <Shield className="w-12 h-12 text-white/10 mb-4" />
+                            <h3 className="text-lg font-medium text-text-primary mb-2">Coming Soon</h3>
+                            <p className="text-sm text-text-secondary max-w-sm">
+                                This configuration matrix is currently locked in your Alpha instance.
+                            </p>
                         </section>
                     )}
                 </div>

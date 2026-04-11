@@ -144,8 +144,27 @@ class UserService:
     async def update_profile(self, user_id: str, profile_data: ProfileUpdate) -> Optional[ProfileEmbed]:
         """Update profile fields in the standalone collection."""
         standalone = await UserProfile.find_one(UserProfile.user_id == PydanticObjectId(user_id))
+        
+        # Legacy migration check logic
         if not standalone:
-            return None
+            user = await self.get_user(user_id)
+            if not user or not user.profile or not isinstance(user.profile, dict):
+                return None
+            
+            p_dict = user.profile
+            standalone = UserProfile(
+                user_id=PydanticObjectId(user_id),
+                content_niche=p_dict.get("content_niche", "Other"),
+                custom_niche=p_dict.get("custom_niche", None),
+                primary_platforms=p_dict.get("primary_platforms", ["YouTube"]),
+                content_style=p_dict.get("content_style", "Educational"),
+                target_audience=p_dict.get("target_audience", None),
+                typical_video_length=p_dict.get("typical_video_length", "Medium (1-10 min)"),
+                preferred_language=p_dict.get("preferred_language", "English"),
+                additional_context=p_dict.get("additional_context", None),
+            )
+            await standalone.insert()
+            logger.info(f"Migrated legacy profile to standalone collection during update for {user_id}")
 
         update_data = profile_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
