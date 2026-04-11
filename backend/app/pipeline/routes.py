@@ -5,6 +5,7 @@ import asyncio
 from typing import Dict, Any, Optional
 from uuid import uuid4
 import redis.asyncio as redis
+from app.models.infrastructure import get_redis
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -134,7 +135,7 @@ async def start_pipeline(
         if not settings.redis_url:
             raise ValueError("REDIS_URL must be configured for pipeline streaming")
         
-        r = redis.from_url(settings.redis_url)
+        r = get_redis()
         pubsub = r.pubsub()
         channel = f"pipeline_stream:{thread_id}:{request_id}"
         await pubsub.subscribe(channel)
@@ -192,7 +193,6 @@ async def start_pipeline(
             yield error_event(thread_id, request_id, local_seq, message=str(e), error_type="STREAM_ERROR")
         finally:
             await pubsub.unsubscribe(channel)
-            await r.close()
             logger.info("Stream closed", extra={"thread_id": thread_id})
 
     return StreamingResponse(
@@ -241,7 +241,7 @@ async def resume_pipeline(
     async def event_generator():
         if not settings.redis_url:
             raise ValueError("REDIS_URL must be configured for pipeline resume streaming")
-        r = redis.from_url(settings.redis_url)
+        r = get_redis()
         pubsub = r.pubsub()
         channel = f"pipeline_stream:{thread_id}:{request_id}"
         await pubsub.subscribe(channel)
@@ -276,7 +276,6 @@ async def resume_pipeline(
             yield error_event(thread_id, request_id, local_seq, message=str(e), error_type="RESUME_STREAM_ERROR")
         finally:
             await pubsub.unsubscribe(channel)
-            await r.close()
             logger.info("Resume stream closed", extra={"thread_id": thread_id})
 
     return StreamingResponse(
