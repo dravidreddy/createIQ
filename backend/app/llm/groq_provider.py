@@ -26,7 +26,15 @@ settings = get_settings()
 class GroqProvider(BaseLLMProvider):
     """
     Groq LLM provider for ultra-fast Llama-3 inference.
+    Shares API key rotation state across all instances so that when one model
+    exhausts a key's rate limit, other models immediately skip to the next key.
     """
+
+    # Class-level shared state for key rotation
+    _shared_api_keys: list = []
+    _shared_clients: list = []
+    _shared_client_idx: int = 0
+    _initialized: bool = False
 
     def __init__(
         self, 
@@ -34,18 +42,33 @@ class GroqProvider(BaseLLMProvider):
         model: str = None
     ):
         self._model_name = model or "llama-3.3-70b-versatile"
-        self.api_keys = [k for k in [
-            api_key or settings.groq_api_key,
-            settings.groq_api_key_2,
-            settings.groq_api_key_3
-        ] if k]
         
-        self.clients = [AsyncGroq(api_key=key) for key in self.api_keys]
-        if not self.clients:
-            logger.warning("No Groq API keys provided!")
+        # Initialize shared clients once (all instances share the same key pool)
+        if not GroqProvider._initialized:
+            GroqProvider._shared_api_keys = [k for k in [
+                api_key or settings.groq_api_key,
+                settings.groq_api_key_2,
+                settings.groq_api_key_3
+            ] if k]
+            GroqProvider._shared_clients = [AsyncGroq(api_key=key) for key in GroqProvider._shared_api_keys]
+            if not GroqProvider._shared_clients:
+                logger.warning("No Groq API keys provided!")
+            GroqProvider._initialized = True
+            logger.info(f"GroqProvider: Initialized with {len(GroqProvider._shared_clients)} API keys")
             
-        self.current_client_idx = 0
-        self._semaphore = asyncio.Semaphore(20) # Groq allows high concurrency
+        self._semaphore = asyncio.Semaphore(20)
+
+    @property
+    def clients(self):
+        return GroqProvider._shared_clients
+
+    @property
+    def current_client_idx(self):
+        return GroqProvider._shared_client_idx
+    
+    @current_client_idx.setter
+    def current_client_idx(self, value):
+        GroqProvider._shared_client_idx = value
 
     @property
     def model_name(self) -> str:
