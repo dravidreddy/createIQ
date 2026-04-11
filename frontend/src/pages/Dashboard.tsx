@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Project } from '../types'
 import toast from 'react-hot-toast'
+import clsx from 'clsx'
 import { ModeToggle, CreatorMode } from '../components/ui/ModeToggle'
 import { PlatformSelector, Platform } from '../components/project/PlatformSelector'
 import { MicButton } from '../components/ui/MicButton'
@@ -21,6 +22,9 @@ export default function Dashboard() {
     const { projects, isLoading, fetchProjects, createProject, deleteProject } = useProjectStore()
     
     const [topic, setTopic] = useState('')
+    const [projectName, setProjectName] = useState('')
+    const [projectType, setProjectType] = useState<'video' | 'series'>('video')
+    const [requiresContinuity, setRequiresContinuity] = useState(false)
     const [mode, setMode] = useState<CreatorMode>('auto')
     const [platform, setPlatform] = useState<Platform>('youtube')
     const [isCreating, setIsCreating] = useState(false)
@@ -35,16 +39,24 @@ export default function Dashboard() {
             toast.error('What are we creating today?')
             return
         }
+        if (projectType === 'series' && !projectName.trim()) {
+            toast.error('Please provide a name for the series')
+            return
+        }
 
         setIsCreating(true)
         try {
-            // Default title from topic
-            const title = topic.length > 30 ? topic.substring(0, 27) + '...' : topic
-            const project = await createProject(title, topic.trim())
-            toast.success('Project initialized')
-            navigate(`/project/${project.id}`)
+            const finalTitle = projectName.trim() ? projectName.trim() : (topic.length > 30 ? topic.substring(0, 27) + '...' : topic)
+            const project = await createProject(finalTitle, topic.trim(), projectType, requiresContinuity)
+            toast.success(projectType === 'series' ? 'Series created' : 'Project initialized')
+            
+            if (projectType === 'series') {
+                navigate(`/series/${project.id}`)
+            } else {
+                navigate(`/project/${project.id}`)
+            }
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Failed to initialize project')
+            toast.error(error.response?.data?.detail || 'Failed to initialize')
         } finally {
             setIsCreating(false)
         }
@@ -63,15 +75,37 @@ export default function Dashboard() {
             </div>
 
             {/* Central Creation Hub */}
-            <div className="space-y-8 animate-in delay-100">
+            <div className="space-y-6 animate-in delay-100">
+                <div className="flex items-center gap-6 pb-2">
+                    <button
+                        onClick={() => setProjectType('video')}
+                        className={clsx("text-lg font-medium transition-all pb-1 border-b-2", projectType === 'video' ? "text-primary-400 border-primary-500" : "text-text-secondary border-transparent hover:text-text-primary")}
+                    >
+                        Individual Video
+                    </button>
+                    <button
+                        onClick={() => setProjectType('series')}
+                        className={clsx("text-lg font-medium transition-all pb-1 border-b-2", projectType === 'series' ? "text-primary-400 border-primary-500" : "text-text-secondary border-transparent hover:text-text-primary")}
+                    >
+                        New Series
+                    </button>
+                </div>
+
                 <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-accent/20 to-accent/0 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
                     <div className="relative flex flex-col gap-4 p-8 bg-surface border border-white/5 rounded-2xl shadow-2xl">
+                        <input
+                            value={projectName}
+                            onChange={(e) => setProjectName(e.target.value)}
+                            placeholder={projectType === 'series' ? "Series Name (Required)" : "Project Name (Optional)"}
+                            className="w-full bg-transparent text-2xl font-bold placeholder:text-text-secondary/50 border-none focus:ring-0 focus:outline-none"
+                        />
+                        <div className="h-[1px] bg-white/5" />
                         <textarea
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
-                            placeholder="I want to create a video about..."
-                            className="w-full bg-transparent text-2xl font-medium placeholder:text-text-secondary/30 border-none focus:ring-0 focus:outline-none resize-none min-h-[120px]"
+                            placeholder={projectType === 'series' ? "What is the overarching goal or daily routine context of this series?" : "I want to create a video about..."}
+                            className="w-full bg-transparent text-lg placeholder:text-text-secondary/30 border-none focus:ring-0 focus:outline-none resize-none min-h-[100px]"
                             data-testid="dashboard-topic-input"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -80,7 +114,18 @@ export default function Dashboard() {
                             }}
                         />
                         
-                            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                        {projectType === 'series' && (
+                            <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer hover:text-text-primary transition-colors">
+                                <input
+                                    type="checkbox"
+                                    checked={requiresContinuity}
+                                    onChange={(e) => setRequiresContinuity(e.target.checked)}
+                                    className="rounded border-white/10 bg-black/20 text-primary-500 focus:ring-primary-500/30"
+                                />
+                                Sequential Continuity (AI automatically learns from previous videos in this series)
+                            </label>
+                        )}
+                        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
                                 <div className="flex items-center gap-4">
                                     <PlatformSelector selected={platform} onChange={setPlatform} />
                                     <div className="h-6 w-[1px] bg-white/5" />

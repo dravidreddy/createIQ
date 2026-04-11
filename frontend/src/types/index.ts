@@ -49,10 +49,12 @@ export interface Project {
     id: string
     user_id: string
     title: string
-    topic: string
+    topic?: string
     status: ProjectStatus
     
     // V4 Architecture fields
+    project_type: 'series' | 'video'
+    requires_continuity: boolean
     parent_project_id?: string
     strategy_plan_id?: string
     platform?: string

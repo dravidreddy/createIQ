@@ -24,6 +24,11 @@ class ProjectStatus(str, Enum):
     FAILED = "failed"
 
 
+class ProjectType(str, Enum):
+    SERIES = "series"
+    VIDEO = "video"
+
+
 class CollaboratorRole(str, Enum):
     OWNER = "owner"
     EDITOR = "editor"
@@ -53,9 +58,11 @@ class Project(Document):
     goal: Optional[str] = None
 
     status: ProjectStatus = ProjectStatus.DRAFT
+    project_type: ProjectType = ProjectType.VIDEO
 
     # Hierarchy
     parent_project_id: Optional[str] = None
+    requires_continuity: bool = False
     strategy_plan_id: Optional[str] = None
 
     # Collaboration

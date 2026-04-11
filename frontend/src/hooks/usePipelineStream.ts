@@ -179,7 +179,6 @@ export const usePipelineStream = () => {
     const ctrl = new AbortController();
     ctrlRef.current = ctrl;
 
-    const token = localStorage.getItem('token');
     const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
 
     try {
@@ -241,7 +240,6 @@ export const usePipelineStream = () => {
     const ctrl = new AbortController();
     ctrlRef.current = ctrl;
 
-    const token = localStorage.getItem('token');
     const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
 
     try {
@@ -283,7 +281,6 @@ export const usePipelineStream = () => {
 
   const checkPipelineStatus = useCallback(async (threadId: string, lastSeq?: number) => {
     const API_BASE = getBaseUrl().replace(/\/api\/v1$/, '');
-    const token = localStorage.getItem('token');
     const url = lastSeq !== undefined 
         ? `${API_BASE}/api/v1/pipeline/${threadId}/status?last_seq=${lastSeq}`
         : `${API_BASE}/api/v1/pipeline/${threadId}/status`;

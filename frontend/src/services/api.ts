@@ -140,8 +140,8 @@ export const projectApi = {
         return response.data
     },
 
-    create: async (title: string, topic: string): Promise<Project> => {
-        const response = await api.post('/projects', { title, topic })
+    create: async (title: string, topic: string, project_type: 'series' | 'video' = 'video', requires_continuity: boolean = false): Promise<Project> => {
+        const response = await api.post('/projects', { title, topic, project_type, requires_continuity })
         return response.data
     },
 

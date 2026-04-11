@@ -10,6 +10,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ProfileSetup from './pages/ProfileSetup'
 import Dashboard from './pages/Dashboard'
+import Series from './pages/Series'
 import Project from './pages/Project'
 import Settings from './pages/Settings'
 
@@ -94,6 +95,11 @@ function App() {
                     <Route path="/dashboard" element={
                         <ProtectedRoute>
                             <Dashboard />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/series/:id" element={
+                        <ProtectedRoute>
+                            <Series />
                         </ProtectedRoute>
                     } />
                     <Route path="/project/:id" element={

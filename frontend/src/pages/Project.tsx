@@ -22,7 +22,7 @@ import { MicButton } from '../components/ui/MicButton';
 export default function Project() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { currentProject, isLoading, fetchProject } = useProjectStore();
+    const { currentProject, isLoading, fetchProject, updateProject } = useProjectStore();
     const { status, streamedContent, threadId } = useStreamingStore();
     const { startPipeline, resumePipeline, checkPipelineStatus } = usePipelineStream();
 
@@ -80,7 +80,7 @@ export default function Project() {
     const handleStart = async () => {
         if (!id) return;
         try {
-            await startPipeline(id, currentProject.topic, { 
+            await startPipeline(id, currentProject.topic || "", { 
                 platforms: [platform],
                 platform: platform,
                 execution_mode: mode
@@ -120,7 +120,15 @@ export default function Project() {
                     </button>
                     <div className="h-4 w-[1px] bg-white/10" />
                     <div className="flex items-center gap-3">
-                        <h1 className="text-sm font-medium text-text-primary">{currentProject.title}</h1>
+                        <InlineEditTitle 
+                            initialTitle={currentProject.title}
+                            onSave={async (newTitle) => {
+                                if (newTitle !== currentProject.title) {
+                                    await updateProject(currentProject.id, { title: newTitle })
+                                    toast.success('Project renamed')
+                                }
+                            }}
+                        />
                         <ChevronRight className="w-4 h-4 text-text-secondary" />
                         <span className="text-xs text-text-secondary font-mono uppercase tracking-wider">{currentProject.status}</span>
                     </div>
@@ -300,5 +308,47 @@ function mapStatusToStage(status: string, streamStatus: string): PipelineStage {
         default:
             return 'research';
     }
+}
+
+function InlineEditTitle({ initialTitle, onSave }: { initialTitle: string, onSave: (val: string) => void }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [title, setTitle] = useState(initialTitle);
+
+    if (isEditing) {
+        return (
+            <input 
+                autoFocus
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                onBlur={() => {
+                    setIsEditing(false);
+                    if (title.trim()) onSave(title.trim());
+                    else setTitle(initialTitle);
+                }}
+                onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                        setIsEditing(false);
+                        if (title.trim()) onSave(title.trim());
+                        else setTitle(initialTitle);
+                    }
+                    if (e.key === 'Escape') {
+                        setIsEditing(false);
+                        setTitle(initialTitle);
+                    }
+                }}
+                className="text-sm font-medium bg-surface text-text-primary px-2 py-1 rounded border border-white/10 focus:outline-none focus:border-primary-500"
+            />
+        );
+    }
+
+    return (
+        <h1 
+            onClick={() => setIsEditing(true)}
+            className="text-sm font-medium text-text-primary cursor-pointer hover:text-primary-400 transition-colors border border-transparent hover:border-white/10 px-2 py-1 -ml-2 rounded"
+            title="Click to rename"
+        >
+            {title}
+        </h1>
+    );
 }
 

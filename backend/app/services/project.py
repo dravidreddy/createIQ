@@ -22,6 +22,8 @@ class ProjectService:
             user_id=user_id,
             title=project_data.title,
             topic=project_data.topic,
+            project_type=project_data.project_type,
+            requires_continuity=project_data.requires_continuity,
             niche=project_data.niche,
             parent_project_id=project_data.parent_project_id,
             strategy_plan_id=project_data.strategy_plan_id,

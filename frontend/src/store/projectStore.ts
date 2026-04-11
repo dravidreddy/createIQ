@@ -20,7 +20,8 @@ interface ProjectState {
     // Actions
     fetchProjects: () => Promise<void>
     fetchProject: (id: string) => Promise<void>
-    createProject: (title: string, topic: string) => Promise<Project>
+    createProject: (title: string, topic: string, project_type?: 'series' | 'video', requires_continuity?: boolean) => Promise<Project>
+    updateProject: (id: string, data: Partial<Project>) => Promise<Project>
     deleteProject: (id: string) => Promise<void>
     selectIdea: (projectId: string, ideaIndex: number) => Promise<void>
 
@@ -76,11 +77,20 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }
     },
 
-    createProject: async (title: string, topic: string) => {
-        const project = await projectApi.create(title, topic)
+    createProject: async (title: string, topic: string, project_type: 'series' | 'video' = 'video', requires_continuity: boolean = false) => {
+        const project = await projectApi.create(title, topic, project_type, requires_continuity)
         set((state) => ({
             projects: [project, ...state.projects],
             currentProject: project
+        }))
+        return project
+    },
+
+    updateProject: async (id: string, data: Partial<Project>) => {
+        const project = await projectApi.update(id, data)
+        set((state) => ({
+            projects: state.projects.map(p => p.id === id ? project : p),
+            currentProject: state.currentProject?.id === id ? project : state.currentProject
         }))
         return project
     },
