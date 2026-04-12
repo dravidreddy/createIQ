@@ -41,7 +41,7 @@ export function GoogleSignInButton({ text = "Continue with Google", onSuccess }:
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-surface-200 dark:border-surface-700 rounded-xl bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors font-medium shadow-sm"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-white/10 rounded-xl bg-elevated text-text-primary hover:bg-white/10 transition-colors font-medium"
         >
             {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
