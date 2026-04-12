@@ -139,17 +139,17 @@ class QdrantVectorStore:
         if not self._genai_client:
             # Fallback: return zero vector
             logger.warning("QdrantVectorStore: no embedding client — returning zero vector")
-            return [0.0] * self.EMBEDDING_DIM
+            return [0.0] * self.VECTOR_SIZE
 
         try:
             result = await self._genai_client.aio.models.embed_content(
-                model="text-embedding-004",
+                model="models/text-embedding-004",
                 contents=text[:2000],  # Truncate to avoid token limits
             )
             return result.embeddings[0].values
         except Exception as e:
             logger.error("QdrantVectorStore: embedding failed — %s", e)
-            return [0.0] * self.EMBEDDING_DIM
+            return [0.0] * self.VECTOR_SIZE
 
     async def upsert(
         self,
