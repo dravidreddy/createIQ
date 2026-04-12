@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 120
     refresh_token_expire_days: int = 7
+    firebase_credentials_path: Optional[str] = Field(default=None, description="Path to Firebase Service Account JSON")
 
     # ─── Cookie security ─────────────────────────────────────────
     # These are computed from `env` at runtime — no env var needed.

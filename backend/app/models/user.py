@@ -18,7 +18,10 @@ class User(Document):
 
     email: Indexed(EmailStr, unique=True)  # type: ignore[valid-type]
     display_name: str
-    hashed_password: str
+    hashed_password: Optional[str] = None
+    
+    auth_provider: str = "local"
+    firebase_uid: Optional[str] = None
 
     is_active: bool = True
     is_verified: bool = False

@@ -115,3 +115,4 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+firebase-service-account.json

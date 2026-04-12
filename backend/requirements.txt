@@ -143,3 +143,4 @@ zstandard==0.25.0
 
 python-json-logger>=2.0.7
 tenacity>=8.2.3
+firebase-admin>=6.5.0

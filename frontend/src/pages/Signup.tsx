@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
 
 export default function Signup() {
     const navigate = useNavigate()
@@ -166,6 +167,17 @@ export default function Signup() {
                                 </>
                             )}
                         </button>
+
+                        <div className="relative py-2">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-surface-200 dark:border-surface-700"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white dark:bg-surface-800 text-surface-500 rounded-lg">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <GoogleSignInButton text="Sign up with Google" />
                     </form>
 
                     <div className="mt-6 text-center">

@@ -100,6 +100,11 @@ export const authApi = {
         return response.data
     },
 
+    firebaseAuth: async (token: string): Promise<User> => {
+        const response = await api.post('/auth/firebase', { token })
+        return response.data
+    },
+
     changePassword: async (current_password: string, new_password: string): Promise<void> => {
         await api.post('/auth/change-password', { current_password, new_password })
     },

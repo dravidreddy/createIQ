@@ -50,3 +50,7 @@ class PasswordResetConfirm(BaseModel):
     """Schema for password reset confirmation."""
     token: str
     new_password: str = Field(..., min_length=8, max_length=100)
+
+class FirebaseTokenRequest(BaseModel):
+    """Schema for Firebase ID token login request."""
+    token: str

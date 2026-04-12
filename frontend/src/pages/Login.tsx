@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
 
 export default function Login() {
     const navigate = useNavigate()
@@ -86,9 +87,9 @@ export default function Login() {
                         <div>
                             <div className="flex items-center justify-between">
                                 <label className="label mb-0">Password</label>
-                                <a href="#" onClick={(e) => { e.preventDefault(); toast('Password recovery coming soon', { icon: '🚧' }) }} className="text-sm font-medium text-primary-500 hover:text-primary-600 -mt-2 mb-1 inline-block">
+                                <Link to="/forgot-password" className="text-sm font-medium text-primary-500 hover:text-primary-600 -mt-2 mb-1 inline-block">
                                     Forgot password?
-                                </a>
+                                </Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
@@ -126,6 +127,17 @@ export default function Login() {
                                 </>
                             )}
                         </button>
+
+                        <div className="relative py-2">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-surface-200 dark:border-surface-700"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white dark:bg-surface-800 text-surface-500 rounded-lg">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <GoogleSignInButton />
                     </form>
 
                     <div className="mt-6 text-center">

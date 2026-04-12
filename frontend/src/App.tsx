@@ -8,6 +8,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
 import ProfileSetup from './pages/ProfileSetup'
 import Dashboard from './pages/Dashboard'
 import Series from './pages/Series'
@@ -82,6 +83,11 @@ function App() {
                 <Route path="/signup" element={
                     <AuthRoute>
                         <Signup />
+                    </AuthRoute>
+                } />
+                <Route path="/forgot-password" element={
+                    <AuthRoute>
+                        <ForgotPassword />
                     </AuthRoute>
                 } />
 

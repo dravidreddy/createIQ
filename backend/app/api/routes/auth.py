@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 
 from app.config import get_settings
 from app.schemas.user import UserCreate, UserResponse
-from app.schemas.auth import Token, LoginRequest, RefreshTokenRequest, PasswordChange
+from app.schemas.auth import Token, LoginRequest, RefreshTokenRequest, PasswordChange, FirebaseTokenRequest
 from app.services.auth import AuthService
 from app.services.user import UserService
 from app.api.deps import get_current_user
@@ -19,50 +19,28 @@ from app.schemas.base import CreatorResponse, wrap_response
 router = APIRouter()
 
 
-@router.post("/signup", response_model=CreatorResponse[UserResponse], status_code=status.HTTP_201_CREATED)
-async def signup(user_data: UserCreate):
-    """Register a new user."""
-    auth_service = AuthService()
-
-    try:
-        user = await auth_service.register_user(user_data)
-        return wrap_response(UserResponse(
-            id=str(user.id),
-            email=user.email,
-            display_name=user.display_name,
-            is_active=user.is_active,
-            is_verified=user.is_verified,
-            created_at=user.created_at,
-            has_profile=False,
-        ))
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-@router.post("/login", response_model=CreatorResponse[UserResponse])
-async def login(login_data: LoginRequest, response: Response):
+@router.post("/firebase", response_model=CreatorResponse[UserResponse])
+async def login_firebase(token_data_in: FirebaseTokenRequest, response: Response):
     """
-    Authenticate user and return User object + set JWT cookies.
-    This atomic response eliminates the login-to-getMe race condition.
+    Authenticate user via Firebase ID token and return User object + set JWT cookies.
     """
     auth_service = AuthService()
     settings = get_settings()
 
-    # 1. Authenticate
-    user = await auth_service.authenticate_user(login_data.email, login_data.password)
+    # 1. Authenticate with Firebase
+    user = await auth_service.authenticate_firebase_user(token_data_in.token)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Invalid Firebase token or authentication failed",
         )
 
-    # 2. Generate Tokens
+    # 2. Generate backend JWT tokens
     token_data = await auth_service.login(user)
     if not token_data:
          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token generation failed")
 
     # 3. Set Hardened Cookies
-    # SameSite=Lax is used to allow the initial navigation but prevent CSRF on mutations
     cookie_params = {
         "httponly": True,
         "samesite": settings.cookie_samesite,
@@ -83,7 +61,7 @@ async def login(login_data: LoginRequest, response: Response):
         **cookie_params
     )
 
-    # 4. Return User Data Atomicly
+    # 4. Return User Data Atomically
     user_service = UserService()
     has_profile = await user_service.has_profile(str(user.id))
 
@@ -140,29 +118,6 @@ async def refresh_token(request: Request, response: Response):
     )
 
     return wrap_response({"message": "Token refreshed successfully"})
-
-
-@router.post("/change-password")
-async def change_password(
-    password_data: PasswordChange,
-    current_user: User = Depends(get_current_user),
-):
-    """Change current user's password."""
-    auth_service = AuthService()
-
-    success = await auth_service.change_password(
-        user_id=str(current_user.id),
-        current_password=password_data.current_password,
-        new_password=password_data.new_password,
-    )
-
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect",
-        )
-
-    return wrap_response({"message": "Password changed successfully"})
 
 
 @router.get("/me", response_model=CreatorResponse[UserResponse])

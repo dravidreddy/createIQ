@@ -2,6 +2,15 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { User } from '../types'
 import { authApi } from '../services/api'
+import { auth } from '../lib/firebase'
+import { 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    GoogleAuthProvider, 
+    signInWithPopup, 
+    signOut as firebaseSignOut,
+    updateProfile
+} from 'firebase/auth'
 
 interface AuthState {
     user: User | null
@@ -11,6 +20,7 @@ interface AuthState {
     // Actions
     login: (email: string, password: string) => Promise<void>
     signup: (email: string, password: string, displayName: string) => Promise<void>
+    loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
     updateUser: (user: Partial<User>) => void
@@ -26,10 +36,13 @@ export const useAuthStore = create<AuthState>()(
             login: async (email: string, password: string) => {
                 set({ isLoading: true })
                 try {
-                    const user = await authApi.login(email, password)
+                    // 1. Firebase Auth
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+                    const idToken = await userCredential.user.getIdToken()
 
-                    // Data is now atomic from the login response, no 
-                    // extra 'getMe' call required (prevents race condition).
+                    // 2. Pass token to backend to get session cookie & User object
+                    const user = await authApi.firebaseAuth(idToken)
+
                     set({
                         user,
                         isAuthenticated: true,
@@ -44,11 +57,37 @@ export const useAuthStore = create<AuthState>()(
             signup: async (email: string, password: string, displayName: string) => {
                 set({ isLoading: true })
                 try {
-                    await authApi.signup(email, password, displayName)
-
-                    // Auto-login after signup
-                    const user = await authApi.login(email, password)
+                    // 1. Firebase Auth Signup
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
                     
+                    // Add display name to firebase profile
+                    await updateProfile(userCredential.user, { displayName })
+
+                    const idToken = await userCredential.user.getIdToken()
+
+                    // 2. Pass to backend to initialize our User document and get session
+                    const user = await authApi.firebaseAuth(idToken)
+                    
+                    set({
+                        user,
+                        isAuthenticated: true,
+                        isLoading: false
+                    })
+                } catch (error) {
+                    set({ isLoading: false })
+                    throw error
+                }
+            },
+
+            loginWithGoogle: async () => {
+                set({ isLoading: true })
+                try {
+                    const provider = new GoogleAuthProvider()
+                    const userCredential = await signInWithPopup(auth, provider)
+                    const idToken = await userCredential.user.getIdToken()
+
+                    const user = await authApi.firebaseAuth(idToken)
+
                     set({
                         user,
                         isAuthenticated: true,
@@ -62,6 +101,9 @@ export const useAuthStore = create<AuthState>()(
 
             logout: async () => {
                 try {
+                    // 1. Sign out of Firebase
+                    await firebaseSignOut(auth)
+                    // 2. Clear backend session cookie
                     await authApi.logout()
                 } catch (error) {
                     console.error("Logout API failed", error)
@@ -70,7 +112,6 @@ export const useAuthStore = create<AuthState>()(
                         user: null,
                         isAuthenticated: false
                     })
-                    // Clear local storage explicitly just in case
                     localStorage.removeItem('auth-storage')
                 }
             },
@@ -83,7 +124,6 @@ export const useAuthStore = create<AuthState>()(
                         isAuthenticated: true
                     })
                 } catch (error) {
-                    // Token invalid/missing, clear auth state
                     set({
                         user: null,
                         isAuthenticated: false
@@ -108,16 +148,13 @@ export const useAuthStore = create<AuthState>()(
     )
 )
 
-// Handle Multi-Tab Logout / State Synchronization
 if (typeof window !== 'undefined') {
     window.addEventListener('storage', (event) => {
         if (event.key === 'auth-storage') {
             const newState = JSON.parse(event.newValue || '{}');
             const currentState = useAuthStore.getState();
             
-            // If another tab logged out (isAuthenticated changed from true to false)
             if (currentState.isAuthenticated && (!newState.state || !newState.state.isAuthenticated)) {
-                // Perform local cleanup and redirect
                 useAuthStore.setState({ user: null, isAuthenticated: false });
                 window.location.href = '/login';
             }
