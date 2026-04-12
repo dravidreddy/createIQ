@@ -60,7 +60,10 @@ function App() {
     // Check session health and config on mount
     useEffect(() => {
         const authState = useAuthStore.getState()
-        if (authState.isAuthenticated) {
+        // Don't re-validate session during profile setup — the user just signed up
+        // and the cookies are fresh. Re-validating here causes a race condition.
+        const isProfileSetup = window.location.pathname === '/profile-setup'
+        if (authState.isAuthenticated && !isProfileSetup) {
             authState.checkAuth()
         }
         
