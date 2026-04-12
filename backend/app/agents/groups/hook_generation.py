@@ -45,7 +45,9 @@ async def hook_creation_node(state: Dict[str, Any]) -> Dict[str, Any]:
         return res.get("hooks", []), creator
 
     start_parallel = time.perf_counter()
-    results = await asyncio.gather(*[generate_variation(f) for f in frameworks])
+    results = []
+    for f in frameworks:
+        results.append(await generate_variation(f))
     latency_parallel = (time.perf_counter() - start_parallel) * 1000
 
     all_hooks = []

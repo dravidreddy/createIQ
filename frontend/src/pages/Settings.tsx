@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { userApi } from '../services/api'
+import { userApi, authApi } from '../services/api'
 import { Profile } from '../types'
 import { User, Save, Loader2, Sparkles, Shield, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -19,6 +19,11 @@ export default function Settings() {
     const [isSaving, setIsSaving] = useState(false)
     const [isSavingUser, setIsSavingUser] = useState(false)
     const [activeTab, setActiveTab] = useState<'persona' | 'account' | 'security' | 'connections'>('persona')
+
+    const [currentPassword, setCurrentPassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [isChangingPassword, setIsChangingPassword] = useState(false)
 
     useEffect(() => {
         if (user) {
@@ -94,6 +99,30 @@ export default function Settings() {
             toast.error('Failed to update account identity')
         } finally {
             setIsSavingUser(false)
+        }
+    }
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (newPassword !== confirmPassword) {
+            toast.error('New passwords do not match')
+            return
+        }
+        if (newPassword.length < 8) {
+            toast.error('New password must be at least 8 characters')
+            return
+        }
+        setIsChangingPassword(true)
+        try {
+            await authApi.changePassword(currentPassword, newPassword)
+            toast.success('Password updated successfully')
+            setCurrentPassword('')
+            setNewPassword('')
+            setConfirmPassword('')
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to update password')
+        } finally {
+            setIsChangingPassword(false)
         }
     }
 
@@ -227,7 +256,7 @@ export default function Settings() {
                                             onChange={(e) => setProfile({ ...profile, content_niche: e.target.value })}
                                             className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                         >
-                                            {NICHES.map((niche) => <option key={niche} value={niche}>{niche}</option>)}
+                                            {NICHES.map((niche) => <option className="bg-gray-900 text-white" key={niche} value={niche}>{niche}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-2">
@@ -237,7 +266,7 @@ export default function Settings() {
                                             onChange={(e) => setProfile({ ...profile, content_style: e.target.value })}
                                             className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                         >
-                                            {STYLES.map((style) => <option key={style} value={style}>{style}</option>)}
+                                            {STYLES.map((style) => <option className="bg-gray-900 text-white" key={style} value={style}>{style}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-2">
@@ -247,8 +276,8 @@ export default function Settings() {
                                             onChange={(e) => setProfile({ ...profile, formality_level: e.target.value })}
                                             className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                         >
-                                            <option value="">Default (Derived from Tone)</option>
-                                            {FORMALITY.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                                            <option className="bg-gray-900 text-white" value="">Default (Derived from Tone)</option>
+                                            {FORMALITY.map((opt) => <option className="bg-gray-900 text-white" key={opt} value={opt}>{opt}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -304,8 +333,8 @@ export default function Settings() {
                                                 onChange={(e) => setProfile({ ...profile, hook_framework: e.target.value })}
                                                 className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                             >
-                                                <option value="">AI Automated</option>
-                                                {HOOK_FRAMEWORKS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                                                <option className="bg-gray-900 text-white" value="">AI Automated</option>
+                                                {HOOK_FRAMEWORKS.map((opt) => <option className="bg-gray-900 text-white" key={opt} value={opt}>{opt}</option>)}
                                             </select>
                                         </div>
                                         <div className="space-y-2">
@@ -315,8 +344,8 @@ export default function Settings() {
                                                 onChange={(e) => setProfile({ ...profile, pacing_style: e.target.value })}
                                                 className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
                                             >
-                                                <option value="">Standard Pacing</option>
-                                                {PACING.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                                                <option className="bg-gray-900 text-white" value="">Standard Pacing</option>
+                                                {PACING.map((opt) => <option className="bg-gray-900 text-white" key={opt} value={opt}>{opt}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -345,10 +374,75 @@ export default function Settings() {
                         </section>
                     )}
 
+                    {/* Security Section */}
+                    {activeTab === 'security' && (
+                        <section className="space-y-6 animate-fade-in">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
+                                    Security Settings
+                                </div>
+                            </div>
+                            <div className="card-minimal space-y-6">
+                                <form onSubmit={handleChangePassword} className="space-y-4">
+                                    <h4 className="text-sm font-semibold text-text-primary">Change Password</h4>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">Current Password</label>
+                                            <input
+                                                type="password"
+                                                required
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">New Password</label>
+                                            <input
+                                                type="password"
+                                                required
+                                                minLength={8}
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">Confirm New Password</label>
+                                            <input
+                                                type="password"
+                                                required
+                                                minLength={8}
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                                            className="btn-primary py-2 px-4 w-full text-sm gap-2 mt-2"
+                                            data-testid="settings-change-password-btn"
+                                        >
+                                            {isChangingPassword ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <Shield className="w-4 h-4" />
+                                                    Change Password
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </section>
+                    )}
+
                     {/* Placeholder Views for uncompleted tabs */}
-                    {(activeTab === 'security' || activeTab === 'connections') && (
+                    {activeTab === 'connections' && (
                         <section className="flex flex-col items-center justify-center p-12 card-minimal text-center animate-fade-in">
-                            <Shield className="w-12 h-12 text-white/10 mb-4" />
+                            <Globe className="w-12 h-12 text-white/10 mb-4" />
                             <h3 className="text-lg font-medium text-text-primary mb-2">Coming Soon</h3>
                             <p className="text-sm text-text-secondary max-w-sm">
                                 This configuration matrix is currently locked in your Alpha instance.

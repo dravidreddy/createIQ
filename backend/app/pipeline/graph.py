@@ -511,9 +511,7 @@ def route_after_trend_research(state: PipelineState) -> str:
 
 
 def route_after_idea_generation(state: PipelineState) -> str:
-    # Always evaluate in Tier 2
-    return "evaluate"
-
+    return "idea_ranking"
 
 def route_after_evaluation(state: PipelineState) -> str:
     """Feedback loop: route back if quality is too low in Auto mode."""
@@ -541,7 +539,7 @@ def route_after_evaluation(state: PipelineState) -> str:
 
 
 def route_after_idea_ranking(state: PipelineState) -> str:
-    return "summarize_context"
+    return "evaluate"
 
 
 def route_after_idea_summarize(state: PipelineState) -> str:
@@ -562,11 +560,11 @@ def route_after_idea_selection(state: PipelineState) -> str:
 # ── Stage 2: Hooks (Atomic) ───────────────
 
 def route_after_hook_creation(state: PipelineState) -> str:
-    return "evaluate"
+    return "hook_evaluation"
 
 
 def route_after_hook_evaluation(state: PipelineState) -> str:
-    return "summarize_context"
+    return "evaluate"
 
 
 def route_after_hook_summarize(state: PipelineState) -> str:
@@ -597,11 +595,11 @@ def route_after_validation(state: PipelineState) -> str:
 
 
 def route_after_script_drafting(state: PipelineState) -> str:
-    return "evaluate"
+    return "fact_checking"
 
 
 def route_after_fact_checking(state: PipelineState) -> str:
-    return "summarize_context"
+    return "evaluate"
 
 
 def route_after_script_summarize(state: PipelineState) -> str:

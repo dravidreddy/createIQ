@@ -11,6 +11,7 @@ from tenacity import (
     retry_if_exception_type,
     before_sleep_log
 )
+import logging
 from app.utils.logging import logger
 
 def retry_with_backoff(
@@ -27,7 +28,7 @@ def retry_with_backoff(
         stop=stop_after_attempt(max_attempts),
         wait=wait_exponential(multiplier=base_delay, max=max_delay),
         retry=retry_if_exception_type(retry_on),
-        before_sleep=before_sleep_log(logger, "info"),
+        before_sleep=before_sleep_log(logger, logging.INFO),
         reraise=True
     )
 

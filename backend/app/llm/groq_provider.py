@@ -112,7 +112,8 @@ class GroqProvider(BaseLLMProvider):
                             **{k: v for k, v in kwargs.items() if k not in [
                                 "json_mode", "tools", "execution_trace", "trace_id", 
                                 "current_budget_cents", "project_budget_limit", 
-                                "priority", "task_type", "project_id"
+                                "priority", "task_type", "project_id", "skip_cache",
+                                "user_id", "request_id", "test_control", "scenario"
                             ]}
                         ),
                         timeout=30.0
@@ -180,7 +181,8 @@ class GroqProvider(BaseLLMProvider):
                         **{k: v for k, v in kwargs.items() if k not in [
                             "json_mode", "tools", "execution_trace", "trace_id",
                             "current_budget_cents", "project_budget_limit",
-                            "priority", "task_type", "project_id"
+                            "priority", "task_type", "project_id", "skip_cache",
+                            "user_id", "request_id", "test_control", "scenario"
                         ]}
                     )
                 

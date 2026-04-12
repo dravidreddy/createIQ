@@ -70,7 +70,7 @@ class ScriptDrafterAgent(BaseAgentExecutor):
         ]
 
         response = await self.llm_generate(
-            messages, task_type="quality", max_tokens=8192, temperature=0.7
+            messages, task_type="quality", max_tokens=4096, temperature=0.7
         )
 
         result = parse_llm_json(response.content, fallback={

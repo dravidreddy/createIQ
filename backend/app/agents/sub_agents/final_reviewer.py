@@ -52,7 +52,7 @@ class FinalReviewerAgent(BaseAgentExecutor):
             LLMMessage(role="user", content=user_prompt),
         ]
 
-        response = await self.llm_generate(messages, task_type="quality", max_tokens=6144)
+        response = await self.llm_generate(messages, task_type="quality", max_tokens=4096)
         result = parse_llm_json(response.content, fallback={
             "quality_score": 0.7,
             "improvement_summary": "",

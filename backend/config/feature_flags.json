@@ -1,8 +1,1 @@
-{
-    "enable_warmup": true,
-    "enable_model_openai_gpt4o_mini": true,
-    "enable_model_anthropic_sonnet": true,
-    "enable_model_gemini_flash": true,
-    "enable_fallback": true,
-    "experimental_routing": false
-}
+{"enable_warmup": true, "enable_model_openai_gpt4o_mini": true, "enable_model_anthropic_sonnet": true, "enable_model_gemini_flash": true, "enable_fallback": true, "experimental_routing": false, "enable_model_groq/llama-3.3-70b-versatile": true}

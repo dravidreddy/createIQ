@@ -309,7 +309,7 @@ class ExecutionLayer:
                     await cache_llm_response(messages, response.model_dump(), task_type=task_type, user_id=user_id, project_id=project_id)
                 await self._save_idempotency(idem_key, response)
 
-                await self.router.record_success(name, latency_ms)
+                await self.router.record_success(name, getattr(response, "latency_ms", 0.0))
                 return response
                     
             except (LLMTimeoutError, asyncio.TimeoutError) as e:
