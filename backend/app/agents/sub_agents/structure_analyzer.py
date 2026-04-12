@@ -40,10 +40,8 @@ class StructureAnalyzerAgent(BaseAgentExecutor):
 
         self.log("info", f"Analyzing structure for {', '.join(platforms)}")
 
-        system_prompt = load_system_prompt(
-            "structure_analyzer",
-            platforms=platforms,
-            video_length=video_length,
+        system_prompt = await self.get_orchestrated_prompt(
+            "structure_analyzer", self.user_context, {}
         )
         user_prompt = load_user_prompt(
             "structure_analyzer",

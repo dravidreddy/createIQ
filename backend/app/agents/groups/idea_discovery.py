@@ -16,16 +16,7 @@ from app.llm.base import ErrorCode
 logger = logging.getLogger(__name__)
 
 
-def _sum_costs(*agents) -> float:
-    return sum(a.get_cost_cents() for a in agents)
 
-
-def _sum_tokens(*agents) -> Dict[str, int]:
-    total = {"input": 0, "output": 0}
-    for a in agents:
-        total["input"] += a.token_usage.get("input", 0)
-        total["output"] += a.token_usage.get("output", 0)
-    return total
 
 
 async def trend_research_node(state: Dict[str, Any]) -> Dict[str, Any]:

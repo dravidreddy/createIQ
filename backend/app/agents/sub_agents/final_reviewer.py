@@ -39,9 +39,8 @@ class FinalReviewerAgent(BaseAgentExecutor):
 
         self.log("info", "Performing final review")
 
-        system_prompt = load_system_prompt(
-            "final_reviewer",
-            user_preferences=user_preferences,
+        system_prompt = await self.get_orchestrated_prompt(
+            "final_reviewer", self.user_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "final_reviewer",

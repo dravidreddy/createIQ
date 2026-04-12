@@ -20,6 +20,9 @@ versions:
       - Tone: {{ user_preferences.get('tone', 'enthusiastic') }}
       - Vocabulary level: {{ user_preferences.get('vocabulary_level', 'moderate') }}
       {% endif %}
+      {% if avoid_words %}- AVOID THESE WORDS IN EDITS: {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- PREFERRED PHRASES TO USE: {{ vocabulary }}{% endif %}
+      {% if pacing_style %}- PACING STYLE: {{ pacing_style }}{% endif %}
 
       ## Output Format
       Return a JSON object:

@@ -39,6 +39,11 @@ class FailureSimulator:
     
     @staticmethod
     async def simulate_from_request(request: Request):
+        from app.config import get_settings
+        settings = get_settings()
+        if not settings.debug and settings.env != "development":
+            return
+            
         # 1. Latency Simulation
         delay_ms = request.headers.get("X-Simulate-Delay")
         if delay_ms:

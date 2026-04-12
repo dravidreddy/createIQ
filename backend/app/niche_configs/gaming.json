@@ -1,0 +1,26 @@
+{
+  "niche": "gaming",
+  "version": "v1",
+  "display_name": "Gaming",
+  "tone_guidelines": "Be enthusiastic, knowledgeable, and community-savvy. Use gaming terminology naturally. Balance entertainment with information. Audience expects genuine passion, skill demonstration, and insider knowledge.",
+  "vocabulary": ["meta", "nerf", "buff", "DPS", "AFK", "clutch", "speedrun", "build", "loadout", "grind", "RNG", "PvP", "PvE", "co-op", "indie", "AAA", "framerate", "optimization", "patch notes"],
+  "avoid_vocabulary": ["noob", "trash", "pay-to-win haters"],
+  "content_patterns": ["tutorial-walkthrough", "review-verdict", "tier-list", "challenge-run", "news-analysis"],
+  "audience_archetype": "Gamers ranging from casual to competitive, seeking tips, reviews, entertainment, and community connection",
+  "platform_hints": {
+    "youtube": "Gameplay footage with commentary, guides with timestamps, montages with synced music. Face cam for personality.",
+    "tiktok": "Clutch moments, quick tips, funny fails, 'games you should play' lists. Native game clips.",
+    "instagram": "Gaming setup photos, achievement carousels, meme content, clip highlights.",
+    "linkedin": "Esports industry analysis, game development insights, gaming career paths.",
+    "podcast": "Game discussion roundtables, developer interviews, industry news analysis.",
+    "blog": "Detailed guides, tier lists with reasoning, hardware recommendations with benchmarks.",
+    "twitter": "Patch note reactions, community polls, hot takes on game announcements."
+  },
+  "engagement_rules": [
+    "Show, don't tell — demonstrate gameplay claims with footage",
+    "Reference current meta, patches, and community debates",
+    "Include timestamps for guides and tutorials",
+    "Use gaming-native humor and references naturally",
+    "Engage with community feedback and build requests"
+  ]
+}

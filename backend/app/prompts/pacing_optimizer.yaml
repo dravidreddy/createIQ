@@ -22,6 +22,9 @@ versions:
 
       ## Platform Priority: Equal (YouTube, TikTok, Reels, Shorts)
       Ensure pacing matches the platform-specific retention curve.
+      {% if avoid_words %}- AVOID THESE WORDS: {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- PREFERRED PHRASES: {{ vocabulary }}{% endif %}
+      {% if pacing_style %}- PACING STYLE: {{ pacing_style }}{% endif %}
 
       ## Output Format
       {

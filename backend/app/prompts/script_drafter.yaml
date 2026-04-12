@@ -79,9 +79,10 @@ versions:
       4. **The Satisfying Exit** (80%-End): High-speed CTA + "The End" loop.
 
       ## Writing Guidelines (Extreme High Energy)
-      - BANNED WORDS: "Buckle up", "Imagine", "Let's explore", "In this video", "Further", "Moreover", "In summary".
-      - USE: "Listen,", "The truth is,", "I realized,", "Here's the mistake:".
-      - Pacing: Short, punchy, spoken English. No "textbook" formal structures.
+      - BANNED WORDS: "Buckle up", "Imagine", "Let's explore", "In this video", "Further", "Moreover", "In summary"{% if avoid_words %}, {{ avoid_words }}{% endif %}.
+      - USE: "Listen,", "The truth is,", "I realized,", "Here's the mistake:"{% if vocabulary %}, {{ vocabulary }}{% endif %}.
+      - Pacing: {% if pacing_style %}{{ pacing_style }}{% else %}Short, punchy, spoken English. No "textbook" formal structures.{% endif %}
+      - Target Audience: {% if target_audience %}{{ target_audience }}{% else %}General audience{% endif %}
 
       ## Output Format
       STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE. NO CONVERSATION.

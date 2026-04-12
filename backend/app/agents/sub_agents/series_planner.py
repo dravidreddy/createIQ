@@ -39,7 +39,9 @@ class SeriesPlannerAgent(BaseAgentExecutor):
 
         self.log("info", "Planning content series")
 
-        system_prompt = load_system_prompt("series_planner")
+        system_prompt = await self.get_orchestrated_prompt(
+            "series_planner", self.user_context, {}
+        )
         user_prompt = load_user_prompt(
             "series_planner",
             final_script=final_script[:3000],

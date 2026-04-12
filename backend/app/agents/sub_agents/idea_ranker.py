@@ -40,9 +40,8 @@ class IdeaRankerAgent(BaseAgentExecutor):
 
         self.log("info", f"Ranking {len(ideas)} ideas")
 
-        system_prompt = load_system_prompt(
-            "idea_ranker",
-            user_preferences=user_preferences,
+        system_prompt = await self.get_orchestrated_prompt(
+            "idea_ranker", {}, user_preferences
         )
         user_prompt = load_user_prompt(
             "idea_ranker",

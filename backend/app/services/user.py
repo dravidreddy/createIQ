@@ -89,6 +89,12 @@ class UserService:
             typical_video_length=profile_data.typical_video_length.value,
             preferred_language=profile_data.preferred_language,
             additional_context=profile_data.additional_context,
+            vocabulary=profile_data.vocabulary,
+            avoid_words=profile_data.avoid_words,
+            formality_level=profile_data.formality_level,
+            hook_framework=profile_data.hook_framework,
+            default_cta=profile_data.default_cta,
+            pacing_style=profile_data.pacing_style,
         )
         await standalone.insert()
 
@@ -102,6 +108,12 @@ class UserService:
             typical_video_length=standalone.typical_video_length,
             preferred_language=standalone.preferred_language,
             additional_context=standalone.additional_context,
+            vocabulary=standalone.vocabulary,
+            avoid_words=standalone.avoid_words,
+            formality_level=standalone.formality_level,
+            hook_framework=standalone.hook_framework,
+            default_cta=standalone.default_cta,
+            pacing_style=standalone.pacing_style,
         )
 
         # Also store in legacy embedded field
@@ -125,6 +137,12 @@ class UserService:
                 typical_video_length=standalone.typical_video_length,
                 preferred_language=standalone.preferred_language,
                 additional_context=standalone.additional_context,
+                vocabulary=standalone.vocabulary,
+                avoid_words=standalone.avoid_words,
+                formality_level=standalone.formality_level,
+                hook_framework=standalone.hook_framework,
+                default_cta=standalone.default_cta,
+                pacing_style=standalone.pacing_style,
                 created_at=standalone.created_at,
                 updated_at=standalone.updated_at,
             )
@@ -162,6 +180,12 @@ class UserService:
                 typical_video_length=p_dict.get("typical_video_length", "Medium (1-10 min)"),
                 preferred_language=p_dict.get("preferred_language", "English"),
                 additional_context=p_dict.get("additional_context", None),
+                vocabulary=p_dict.get("vocabulary", None),
+                avoid_words=p_dict.get("avoid_words", None),
+                formality_level=p_dict.get("formality_level", None),
+                hook_framework=p_dict.get("hook_framework", None),
+                default_cta=p_dict.get("default_cta", None),
+                pacing_style=p_dict.get("pacing_style", None),
             )
             await standalone.insert()
             logger.info(f"Migrated legacy profile to standalone collection during update for {user_id}")
@@ -190,6 +214,12 @@ class UserService:
                 "typical_video_length": standalone.typical_video_length,
                 "preferred_language": standalone.preferred_language,
                 "additional_context": standalone.additional_context,
+                "vocabulary": standalone.vocabulary,
+                "avoid_words": standalone.avoid_words,
+                "formality_level": standalone.formality_level,
+                "hook_framework": standalone.hook_framework,
+                "default_cta": standalone.default_cta,
+                "pacing_style": standalone.pacing_style,
             }
             user.updated_at = datetime.utcnow()
             await user.save()
@@ -216,4 +246,10 @@ class UserService:
             video_length=profile.typical_video_length,
             language=profile.preferred_language,
             additional_context=profile.additional_context or "",
+            vocabulary=profile.vocabulary,
+            avoid_words=profile.avoid_words,
+            formality_level=profile.formality_level,
+            hook_framework=profile.hook_framework,
+            default_cta=profile.default_cta,
+            pacing_style=profile.pacing_style,
         )

@@ -52,13 +52,8 @@ class ScriptDrafterAgent(BaseAgentExecutor):
         elif isinstance(research, str):
             research_summary = research[:3000]
 
-        system_prompt = load_system_prompt(
-            "script_drafter",
-            user_preferences=user_preferences,
-            platforms=project_context.get("platforms", ["YouTube"]),
-            video_length=project_context.get("video_length", "Medium (1-10 min)"),
-            target_audience=project_context.get("target_audience", "general"),
-            language=project_context.get("language", "English"),
+        system_prompt = await self.get_orchestrated_prompt(
+            "script_drafter", project_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "script_drafter",

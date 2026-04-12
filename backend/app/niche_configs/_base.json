@@ -1,0 +1,24 @@
+{
+  "niche": "_base",
+  "version": "v1",
+  "display_name": "General",
+  "tone_guidelines": "Use clear, engaging language. Be informative and approachable. Adapt to the audience's level of expertise.",
+  "vocabulary": [],
+  "avoid_vocabulary": ["basically", "obviously", "just", "simply"],
+  "content_patterns": ["hook-first", "problem-solution", "listicle"],
+  "audience_archetype": "General audience seeking valuable, well-structured content",
+  "platform_hints": {
+    "youtube": "Balance information density with visual storytelling. Use chapter markers for navigation.",
+    "tiktok": "Fast-paced delivery with strong visual hooks. On-screen text reinforcement.",
+    "instagram": "Visual-first, concise messaging. Carousel-friendly structure for educational content.",
+    "linkedin": "Professional tone, data-backed insights. Thought leadership positioning.",
+    "podcast": "Conversational flow with clear structure. Use stories and examples.",
+    "blog": "Scannable format with headers, bullet points, and key takeaways.",
+    "twitter": "Concise, punchy thread format. Lead with the strongest insight."
+  },
+  "engagement_rules": [
+    "Open with a compelling question or bold statement",
+    "Deliver value within the first 10 seconds",
+    "Include a clear call-to-action"
+  ]
+}

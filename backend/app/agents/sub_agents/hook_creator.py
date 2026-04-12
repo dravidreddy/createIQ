@@ -34,16 +34,20 @@ class HookCreatorAgent(BaseAgentExecutor):
     async def execute_core(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         selected_idea = input_data.get("selected_idea", {})
         user_preferences = input_data.get("user_preferences", {})
+        framework = input_data.get("framework", "")
 
-        self.log("info", f"Creating hooks for: {selected_idea.get('title', 'unknown')}")
+        self.log("info", f"Creating hooks for: {selected_idea.get('title', 'unknown')} (framework: {framework or 'all'})")
 
-        system_prompt = load_system_prompt(
-            "hook_creator",
-            user_preferences=user_preferences,
+        system_prompt = await self.get_orchestrated_prompt(
+            "hook_creator", self.user_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "hook_creator",
-            selected_idea=selected_idea,
+            idea_title=selected_idea.get("title", ""),
+            idea_description=selected_idea.get("description", ""),
+            unique_angle=selected_idea.get("unique_angle", ""),
+            target_emotion=selected_idea.get("target_emotion", "curiosity"),
+            framework=framework,
         )
 
         messages = [

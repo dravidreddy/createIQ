@@ -41,7 +41,9 @@ class FactCheckerAgent(BaseAgentExecutor):
 
         search_tool = get_tavily_tool()
 
-        system_prompt = load_system_prompt("fact_checker")
+        system_prompt = await self.get_orchestrated_prompt(
+            "fact_checker", {}, {}
+        )
         user_prompt = load_user_prompt("fact_checker", script=script[:12000])
 
         messages = [

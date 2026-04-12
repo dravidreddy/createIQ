@@ -17,6 +17,9 @@ versions:
       - Style: {{ user_preferences.get('writing_style', 'High Energy') }}
       - Tone: {{ user_preferences.get('tone', 'enthusiastic') }}
       - Pacing: Fast, punchy, spoken English.
+      {% if avoid_words %}- AVOID THESE WORDS (Delete or replace them): {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- PREFERRED PHRASES: {{ vocabulary }}{% endif %}
+      {% if pacing_style %}- PACING: {{ pacing_style }}{% endif %}
 
       ## Output Format
       STRICT JSON ONLY. NO MARKDOWN PREAMBLE.

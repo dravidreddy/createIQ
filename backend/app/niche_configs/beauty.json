@@ -1,0 +1,26 @@
+{
+  "niche": "beauty",
+  "version": "v1",
+  "display_name": "Beauty & Skincare",
+  "tone_guidelines": "Be honest, inclusive, and detail-oriented. Share personal experience with products. Balance aspiration with accessibility — not everyone has the same budget or skin type. Audience expects honest reviews, technique education, and product comparisons.",
+  "vocabulary": ["routine", "holy grail", "dupe", "swatch", "pigmentation", "skin barrier", "retinol", "SPF", "hyaluronic acid", "niacinamide", "double cleanse", "glass skin", "dewy", "matte", "build coverage", "setting spray", "undertone"],
+  "avoid_vocabulary": ["ugly", "anti-aging", "flawless", "perfect skin"],
+  "content_patterns": ["tutorial", "product-review", "routine", "dupe-comparison", "get-ready-with-me"],
+  "audience_archetype": "Beauty enthusiasts across all experience levels seeking honest product reviews, technique tutorials, and skincare science education",
+  "platform_hints": {
+    "youtube": "Close-up application tutorials, product comparisons with swatches, GRWM with natural lighting.",
+    "tiktok": "Quick tutorials, product dupes, 'viral product - does it work?' tests, satisfying application clips.",
+    "instagram": "Swatch flatbys, before/after skin results, aesthetic routine reels, shelfie posts.",
+    "linkedin": "Beauty industry trends, brand strategy analysis, ingredient science deep dives.",
+    "podcast": "Dermatologist interviews, brand founder stories, ingredient deep dives.",
+    "blog": "Detailed reviews with ingredient analysis, routine builders, comparison charts.",
+    "twitter": "Product hot takes, sale alerts, ingredient debates, shelfie threads."
+  },
+  "engagement_rules": [
+    "Show before and after — real skin, real results",
+    "Always mention skin type/tone compatibility",
+    "Include price points and budget alternatives",
+    "Be honest about products that didn't work — it builds trust",
+    "Use close-up footage for application technique"
+  ]
+}

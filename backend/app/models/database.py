@@ -80,6 +80,8 @@ async def init_db() -> None:
     # V4 Pipeline
     from app.models.user_preferences import UserPreferencesModel
     from app.models.pipeline_checkpoint import PipelineCheckpoint
+    # NAPOS
+    from app.models.niche_config import NicheConfigModel
 
     await init_beanie(
         database=db,
@@ -109,6 +111,8 @@ async def init_db() -> None:
             # ─── V4 Pipeline ────────────────────────────
             UserPreferencesModel,
             PipelineCheckpoint,
+            # ─── NAPOS ──────────────────────────────────
+            NicheConfigModel,
             # ─── Legacy (deprecated) ────────────────────
             ProjectArtifact,
             AgentSession,

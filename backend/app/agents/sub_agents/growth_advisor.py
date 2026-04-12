@@ -37,7 +37,9 @@ class GrowthAdvisorAgent(BaseAgentExecutor):
 
         self.log("info", "Generating growth strategy")
 
-        system_prompt = load_system_prompt("growth_advisor")
+        system_prompt = await self.get_orchestrated_prompt(
+            "growth_advisor", self.user_context, {}
+        )
         user_prompt = load_user_prompt(
             "growth_advisor",
             series_plan=series_plan,

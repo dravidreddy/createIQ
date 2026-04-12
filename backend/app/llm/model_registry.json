@@ -90,14 +90,16 @@
         }
     },
     "routing_defaults": {
-        "IDEAS": "llama-3-3-70b",
+        "IDEAS": "llama-3-1-8b",
         "quality": "llama-3-3-70b",
         "SMALL_TALK": "llama-3-1-8b",
         "CREATIVE": "llama-3-3-70b",
         "LONG_FORM": "llama-3-3-70b",
         "STRATEGY": "llama-3-3-70b",
         "BULK_GENERATION": "llama-3-1-8b",
-        "EDITING": "llama-3-1-8b"
+        "EDITING": "llama-3-1-8b",
+        "scoring": "llama-3-1-8b",
+        "repair": "llama-3-1-8b"
     },
     "fallbacks": {
         "llama-3-3-70b": ["llama-3-1-8b"],

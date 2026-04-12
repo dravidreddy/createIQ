@@ -1,0 +1,26 @@
+{
+  "niche": "lifestyle",
+  "version": "v1",
+  "display_name": "Lifestyle & Wellness",
+  "tone_guidelines": "Be authentic, warm, and relatable. Share personal experiences and honest reflections. Audience expects genuine connection, aesthetic quality, and practical life improvement tips.",
+  "vocabulary": ["routine", "intentional living", "self-care", "mindfulness", "declutter", "minimalism", "habit stacking", "morning routine", "journal", "boundaries", "reset", "glow-up", "aesthetic", "curated"],
+  "avoid_vocabulary": ["grind culture", "hustle", "toxic positivity", "perfect"],
+  "content_patterns": ["day-in-the-life", "routine", "haul-review", "before-after", "vlog-narrative"],
+  "audience_archetype": "Young adults and millennials seeking inspiration for personal development, daily routines, home organization, and intentional living",
+  "platform_hints": {
+    "youtube": "Aesthetic vlogs with natural lighting, routine videos, room tours, hauls. Calm music and clean editing.",
+    "tiktok": "GRWM (Get Ready With Me), routine snippets, aesthetic transitions, product recommendations.",
+    "instagram": "Flat lays, aesthetic lifestyle grids, story-based daily updates, branded partnerships.",
+    "linkedin": "Work-life balance, productivity systems, career lifestyle alignment.",
+    "podcast": "Reflective conversations, guest interviews on habits, listener Q&A.",
+    "blog": "Seasonal guides, product roundups, personal essays with lifestyle tips.",
+    "twitter": "Daily affirmations, micro-tips, product recommendations."
+  },
+  "engagement_rules": [
+    "Lead with a relatable struggle or aspiration",
+    "Show the real + the aspirational — audience values authenticity",
+    "Use aesthetic visuals as a hook but deliver substantive tips",
+    "Include specific product names, brands, or methods",
+    "Invite audience to share their own routines and experiences"
+  ]
+}

@@ -269,13 +269,14 @@ class LLMRouter:
         
         # ─── Test Control (Phase 1) ──────────────────────────────────
         test_control = kwargs.get("test_control")
-        if test_control == "fail_llm":
-            logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting LLM failure for trace {trace_id}")
-            raise Exception("Injected LLM failure for testing")
-        if test_control == "slow_response":
-            import asyncio
-            logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting 5s delay for trace {trace_id}")
-            await asyncio.sleep(5)
+        if test_control and (settings.debug or settings.env == "development"):
+            if test_control == "fail_llm":
+                logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting LLM failure for trace {trace_id}")
+                raise Exception("Injected LLM failure for testing")
+            if test_control == "slow_response":
+                import asyncio
+                logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting 5s delay for trace {trace_id}")
+                await asyncio.sleep(5)
 
         return await self.exec_layer.execute(
             provider_name=model_name,
@@ -304,13 +305,14 @@ class LLMRouter:
         
         # ─── Test Control (Phase 1) ──────────────────────────────────
         test_control = kwargs.get("test_control")
-        if test_control == "fail_llm":
-            logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting LLM failure for trace {trace_id}")
-            raise Exception("Injected LLM failure for streaming test")
-        if test_control == "slow_response":
-            import asyncio
-            logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting 5s delay for trace {trace_id}")
-            await asyncio.sleep(5)
+        if test_control and (settings.debug or settings.env == "development"):
+            if test_control == "fail_llm":
+                logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting LLM failure for trace {trace_id}")
+                raise Exception("Injected LLM failure for streaming test")
+            if test_control == "slow_response":
+                import asyncio
+                logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting 5s delay for trace {trace_id}")
+                await asyncio.sleep(5)
 
         async for chunk in self.exec_layer.execute_stream(
             provider_name=model_name,

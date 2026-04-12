@@ -20,6 +20,12 @@ export interface Profile {
     typical_video_length: string
     preferred_language: string
     additional_context?: string
+    vocabulary?: string
+    avoid_words?: string
+    formality_level?: string
+    hook_framework?: string
+    default_cta?: string
+    pacing_style?: string
     created_at: string
     updated_at: string
 }
@@ -300,6 +306,22 @@ export type VideoLength =
     | 'Long-form (10+ min)'
     | 'Mixed'
 
+export type FormalityLevel =
+    | 'Highly Casual'
+    | 'Neutral'
+    | 'Professional Academic'
+
+export type HookFramework =
+    | 'Problem-Agitate-Solve'
+    | 'Bold Claim + Proof'
+    | 'Question -> Story -> Lesson'
+    | 'Status Quo Interruption'
+
+export type PacingStyle =
+    | 'Fast/High-Retention (MrBeast style)'
+    | 'Conversational/Relaxed'
+    | 'Educational/Step-by-Step'
+
 export interface ProfileCreate {
     content_niche: ContentNiche
     custom_niche?: string
@@ -309,6 +331,12 @@ export interface ProfileCreate {
     typical_video_length: VideoLength
     preferred_language: string
     additional_context?: string
+    vocabulary?: string
+    avoid_words?: string
+    formality_level?: string
+    hook_framework?: string
+    default_cta?: string
+    pacing_style?: string
 }
 
 // ─── V3.3 Types ─────────────────────────────────────────────────

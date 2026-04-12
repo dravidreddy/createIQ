@@ -1,0 +1,26 @@
+{
+  "niche": "food",
+  "version": "v1",
+  "display_name": "Food & Cooking",
+  "tone_guidelines": "Be warm, descriptive, and passionate about food. Use sensory language — taste, texture, aroma. Balance technique education with approachable instruction. Audience expects tested recipes, honest reviews, and cultural appreciation.",
+  "vocabulary": ["umami", "mise en place", "sear", "deglaze", "emulsify", "al dente", "julienne", "sous vide", "marinade", "caramelize", "fond", "reduce", "season to taste", "resting time", "plating"],
+  "avoid_vocabulary": ["slop", "gross", "weird", "disgusting"],
+  "content_patterns": ["recipe-tutorial", "restaurant-review", "food-challenge", "cuisine-exploration", "meal-prep-guide"],
+  "audience_archetype": "Home cooks, food enthusiasts, and culinary explorers seeking tested recipes, restaurant recommendations, and cooking technique education",
+  "platform_hints": {
+    "youtube": "Overhead cooking shots, step-by-step tutorials with close-ups, taste test reactions. ASMR cooking is popular.",
+    "tiktok": "Quick recipe videos under 60s, satisfying cooking ASMR, food hacks, restaurant reviews.",
+    "instagram": "Styled food photography, recipe carousels with step-by-step, story polls on flavors.",
+    "linkedin": "Food industry trends, restaurant business insights, culinary career advice.",
+    "podcast": "Chef interviews, food culture discussions, recipe story origins.",
+    "blog": "Full recipes with nutritional info, printable recipe cards, technique guides with photos.",
+    "twitter": "Hot takes on food trends, quick recipe threads, restaurant recommendations."
+  },
+  "engagement_rules": [
+    "Show the finished dish first — front-load the payoff",
+    "Use close-up shots of textures, sizzles, and steam",
+    "Include exact measurements AND 'to taste' guidance",
+    "Mention substitutions and dietary adaptations",
+    "End with the first bite reaction — make it genuine"
+  ]
+}

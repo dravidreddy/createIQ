@@ -102,3 +102,8 @@ class PipelineState(TypedDict):
     execution_trace: List[str]           # Step-by-step lifecycle log
     last_model_used: Optional[str]       # Name of the last model that responded
     fallback_triggered: bool             # Whether a fallback occurred during execution
+
+    # ── NAPOS Prompt Orchestration ────────────────────────────
+    napos_niche: Optional[str]           # Active niche for this run (e.g. 'fitness')
+    napos_layers_used: List[str]         # Which layers were composed per agent
+    napos_prompt_hash: Optional[str]     # Hash of last composed prompt (A/B tracking)

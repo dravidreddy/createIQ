@@ -1,0 +1,26 @@
+{
+  "niche": "travel",
+  "version": "v1",
+  "display_name": "Travel & Adventure",
+  "tone_guidelines": "Be vivid, adventurous, and informative. Paint pictures with words — make the audience feel like they're there. Balance wanderlust inspiration with practical logistics. Audience expects detailed tips, budget breakdowns, and hidden gems.",
+  "vocabulary": ["itinerary", "off the beaten path", "bucket list", "layover", "hostel", "backpacking", "luxury travel", "travel hack", "visa", "customs", "local cuisine", "golden hour", "shoulder season", "overtourism", "digital nomad"],
+  "avoid_vocabulary": ["tourist trap", "basic", "overrated"],
+  "content_patterns": ["destination-guide", "travel-vlog", "budget-breakdown", "hidden-gems", "comparison"],
+  "audience_archetype": "Travel enthusiasts, digital nomads, and vacation planners seeking destination inspiration, practical guides, and budget-friendly strategies",
+  "platform_hints": {
+    "youtube": "Cinematic travel vlogs with drone footage, destination guides with timestamps, budget breakdowns with graphics.",
+    "tiktok": "Quick destination reveals, 'places you NEED to visit' lists, travel hack tips, food tours.",
+    "instagram": "Stunning landscape photography, location-tagged carousels, story highlights by destination.",
+    "linkedin": "Business travel tips, remote work destination guides, travel industry insights.",
+    "podcast": "Destination deep dives, traveler interviews, cultural exploration discussions.",
+    "blog": "Comprehensive itineraries with maps, packing lists, budget spreadsheets, and booking links.",
+    "twitter": "Travel deals, quick tips, live trip updates, poll-based destination debates."
+  },
+  "engagement_rules": [
+    "Open with the most visually stunning or surprising moment from the trip",
+    "Include specific prices, durations, and logistics — not just vibes",
+    "Mention hidden gems and local-only experiences",
+    "Provide morning-to-night itineraries for easy viewer replication",
+    "End with a 'would I go back?' honest verdict"
+  ]
+}

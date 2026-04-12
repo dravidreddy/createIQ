@@ -65,6 +65,13 @@ class ProfileBase(BaseModel):
     typical_video_length: VideoLength
     preferred_language: str = Field(default="English", max_length=50)
     additional_context: Optional[str] = Field(None, max_length=1000)
+    # Advanced Persona Fields
+    vocabulary: Optional[str] = Field(None, max_length=1000)
+    avoid_words: Optional[str] = Field(None, max_length=1000)
+    formality_level: Optional[str] = Field(None, max_length=100)
+    hook_framework: Optional[str] = Field(None, max_length=100)
+    default_cta: Optional[str] = Field(None, max_length=500)
+    pacing_style: Optional[str] = Field(None, max_length=100)
 
 
 class ProfileCreate(ProfileBase):
@@ -82,6 +89,12 @@ class ProfileUpdate(BaseModel):
     typical_video_length: Optional[VideoLength] = None
     preferred_language: Optional[str] = Field(None, max_length=50)
     additional_context: Optional[str] = Field(None, max_length=1000)
+    vocabulary: Optional[str] = Field(None, max_length=1000)
+    avoid_words: Optional[str] = Field(None, max_length=1000)
+    formality_level: Optional[str] = Field(None, max_length=100)
+    hook_framework: Optional[str] = Field(None, max_length=100)
+    default_cta: Optional[str] = Field(None, max_length=500)
+    pacing_style: Optional[str] = Field(None, max_length=100)
 
 
 class ProfileResponse(ProfileBase):
@@ -108,3 +121,9 @@ class ProfileContext(BaseModel):
     video_length: str
     language: str
     additional_context: str
+    vocabulary: Optional[str] = None
+    avoid_words: Optional[str] = None
+    formality_level: Optional[str] = None
+    hook_framework: Optional[str] = None
+    default_cta: Optional[str] = None
+    pacing_style: Optional[str] = None

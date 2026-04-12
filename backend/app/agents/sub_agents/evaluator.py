@@ -71,15 +71,15 @@ class EvaluatorAgent(BaseAgentExecutor):
         try:
             response = await self.llm_generate(
                 messages, 
-                task_type="quality", 
+                task_type="scoring", 
                 temperature=0.1,
-                model_override="gemini-1.5-flash"
+                model_override="llama-3-1-8b"
             )
             result = parse_llm_json(response.content, fallback={"score": 0.5, "reasoning": "Parse failed"})
         except Exception as e:
             logger.error(f"EvaluatorAgent: non-critical failure during evaluation: {e}")
             result = {"score": 0.5, "reasoning": f"Evaluation error: {str(e)}"}
         
-        self.log(f"Evaluation for '{stage}': Score={result.get('score')} Reasoning={result.get('reasoning')[:100]}...")
+        self.log("info", f"Evaluation for '{stage}': Score={result.get('score')} Reasoning={result.get('reasoning', '')[:100]}...")
         
         return result

@@ -7,6 +7,7 @@ Uses Tavily search tool for real-time web research.
 
 import asyncio
 import logging
+from datetime import datetime
 from typing import Any, Dict
 
 from app.agents.base_executor import BaseAgentExecutor, Priority
@@ -45,7 +46,7 @@ class TrendResearcherAgent(BaseAgentExecutor):
         # 1. Perform 4 targeted web searches in parallel
         search_tool = get_tavily_tool()
         queries = [
-            f"trending {niche} content ideas 2025 {topic}",
+            f"trending {niche} content ideas {datetime.now().year} {topic}",
             f"{topic} viral content trends {' '.join(platforms)}",
             f"latest {niche} news {topic}",
             f"{topic} audience engagement trends",
@@ -66,11 +67,14 @@ class TrendResearcherAgent(BaseAgentExecutor):
             all_sources.extend(result.get("sources", []))
 
         # 2. Synthesize with LLM
-        system_prompt = load_system_prompt(
-            "trend_researcher",
-            platforms=platforms,
-            target_audience=input_data.get("target_audience", "general"),
-            user_preferences=user_preferences,
+        project_ctx = {
+            "platforms": platforms,
+            "target_audience": input_data.get("target_audience", "general"),
+            "niche": niche,
+            "topic": topic,
+        }
+        system_prompt = await self.get_orchestrated_prompt(
+            "trend_researcher", project_ctx, user_preferences
         )
         user_prompt = load_user_prompt(
             "trend_researcher",
@@ -98,8 +102,7 @@ class TrendResearcherAgent(BaseAgentExecutor):
 
         response = await self.llm_generate(messages, task_type="quality")
         
-        # DEBUG: Log raw response for evaluation analysis
-        print(f"\n--- DEBUG: TREND RESEARCH RESPONSE FROM {response.model} ---\n{response.content}\n--- END DEBUG ---\n")
+        logger.debug("TrendResearcher raw response from %s (%d chars)", response.model, len(response.content))
         
         result = parse_llm_json(response.content, fallback={
             "research_results": [],

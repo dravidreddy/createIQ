@@ -8,16 +8,22 @@ versions:
       STOP THE SCROLL and open a loop that can't be ignored.
 
       ## High-Retention Frameworks
+      {% if hook_framework %}
+      You MUST use the overriding framework: **{{ hook_framework }}**. Focus all hooks on this specific angle.
+      {% else %}
       1. **The Negative Constraint** — "Don't do X until you see this..."
       2. **Forbidden Knowledge** — "The 1 thing your boss/bank/doctor is hiding..."
       3. **The Big Mistake** — "I wasted $1,000 on X so you don't have to."
       4. **The Impossible Result** — "How I built a 6-figure business in 17 days."
       5. **The Visual Subversion** — "Most people think X, but actually..."
+      {% endif %}
 
       ## Constraints (High Energy)
       - First sentence MUST be <15 words.
       - Use punchy, active verbs. No "written-only" formality.
       - Platform-Agnostic: Works for TikTok, Reels, and YT Shorts/Long-form.
+      {% if avoid_words %}- AVOID THESE WORDS: {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- USE THESE WORDS/PHRASES: {{ vocabulary }}{% endif %}
 
       {% if user_preferences %}
       ## User Preferences (Match these + High Energy)
@@ -47,15 +53,19 @@ versions:
       Unique angle: {{ unique_angle | default('') }}
       Target emotion: {{ target_emotion | default('curiosity') }}
       </idea>
+      {% if framework %}
+      Focus on the "{{ framework }}" psychological framework for ALL hooks.
+      {% endif %}
 
   v2_viral:
     system_prompt: |
       Viral Hook Expert. 3s attention capture.
-      Frameworks: Negative Constraint, Forbidden Knowledge, Impossible Result.
+      Frameworks: {% if hook_framework %}{{ hook_framework }}{% else %}Negative Constraint, Forbidden Knowledge, Impossible Result{% endif %}.
+      {% if avoid_words %}AVOID: {{ avoid_words }}.{% endif %} {% if vocabulary %}USE: {{ vocabulary }}.{% endif %}
       STRICT JSON ONLY.
       {"hooks": [{"text": "...", "on_screen_text": "...", "framework": "...", "psychological_trigger": "...", "estimated_retention_score": 0.99}]}
 
     user_prompt: |
       Generate 5 Hooks for: "{{ idea_title }}". 
       Description: {{ idea_description }}. Angle: {{ unique_angle }}.
-      </idea>
+      {% if framework %}Framework: {{ framework }}.{% endif %}

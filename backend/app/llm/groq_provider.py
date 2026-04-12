@@ -42,6 +42,7 @@ class GroqProvider(BaseLLMProvider):
         model: str = None
     ):
         self._model_name = model or "llama-3.3-70b-versatile"
+        self.provider_name = "groq"
         
         # Initialize shared clients once (all instances share the same key pool)
         if not GroqProvider._initialized:
@@ -176,7 +177,11 @@ class GroqProvider(BaseLLMProvider):
                         temperature=temperature,
                         max_tokens=max_tokens,
                         stream=True,
-                        **{k: v for k, v in kwargs.items() if k not in ["json_mode", "tools"]}
+                        **{k: v for k, v in kwargs.items() if k not in [
+                            "json_mode", "tools", "execution_trace", "trace_id",
+                            "current_budget_cents", "project_budget_limit",
+                            "priority", "task_type", "project_id"
+                        ]}
                     )
                 
                 async for chunk in stream:

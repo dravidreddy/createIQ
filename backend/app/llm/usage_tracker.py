@@ -75,7 +75,27 @@ class UsageTracker:
             f"Latency: {metrics.latency_ms:.0f}ms"
         )
 
-        # TODO: Persist to database for billing/analytics
+        # Persist to database for billing/analytics without blocking
+        async def _persist_metrics():
+            try:
+                from app.models.job_metrics import JobMetrics
+                # Prefer request_id, fallback to trace_id mapping
+                job_id = request_id or trace_id
+                if not job_id or job_id == "unknown":
+                    return
+
+                doc = await JobMetrics.find_one(JobMetrics.job_id == job_id)
+                if not doc:
+                    doc = JobMetrics(job_id=job_id)
+                
+                doc.total_cost_cents += cost
+                doc.total_latency_ms += int(metrics.latency_ms)
+                await doc.save()
+            except Exception as e:
+                logger.warning(f"Failed to persist usage metrics to DB: {e}")
+
+        import asyncio
+        asyncio.create_task(_persist_metrics())
         
         return metrics
 

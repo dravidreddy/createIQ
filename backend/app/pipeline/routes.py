@@ -24,6 +24,7 @@ from app.pipeline.streaming import (
     get_interrupt_data,
     error_event,
     stream_start_event,
+    heartbeat_event,
 )
 from app.config import get_settings
 from app.worker import run_pipeline_async
@@ -54,6 +55,11 @@ async def verify_alpha_rate_limit(user: User = Depends(get_current_user)):
                 status_code=429, 
                 detail=f"Rate limit exceeded. Max {settings.alpha_rate_limit_rpm} pipeline starts per minute."
             )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"Rate limit bypass: Redis unreachable for user {user.id} - {e}")
+        # Fail open: allow execution without limits if infrastructure degraded
     finally:
         await r.close()
 
@@ -102,6 +108,10 @@ def _build_initial_state(body: PipelineStartRequest, user: User, request_id: str
         "execution_trace": ["START: request received"],
         "last_model_used": None,
         "fallback_triggered": False,
+        # NAPOS
+        "napos_niche": body.niche or None,
+        "napos_layers_used": [],
+        "napos_prompt_hash": None,
     }
 
 

@@ -1,0 +1,26 @@
+{
+  "niche": "tech",
+  "version": "v1",
+  "display_name": "Tech & Software",
+  "tone_guidelines": "Be precise, informed, and slightly opinionated. Use technical vocabulary confidently but explain jargon when targeting broader audiences. Balance depth with accessibility. Audience expects cutting-edge knowledge and honest assessments.",
+  "vocabulary": ["benchmark", "latency", "throughput", "ecosystem", "stack", "framework", "API", "open-source", "spec sheet", "chipset", "architecture", "optimization", "deployment", "scalability", "iteration", "bleeding-edge"],
+  "avoid_vocabulary": ["game-changer", "revolutionary", "kills", "destroys", "insane", "unbelievable"],
+  "content_patterns": ["comparison", "review-verdict", "tutorial-walkthrough", "news-analysis", "deep-dive"],
+  "audience_archetype": "Tech-savvy consumers, developers, and early adopters seeking honest reviews, practical tutorials, and industry analysis",
+  "platform_hints": {
+    "youtube": "Screen recordings, product unboxings, benchmark comparisons with data overlays. Clean editing with motion graphics.",
+    "tiktok": "Quick tips, surprising tech hacks, 'things you didn't know' format. On-screen demos.",
+    "instagram": "Aesthetic product shots, spec comparison carousels, tech setup tours.",
+    "linkedin": "Industry analysis, career advice in tech, enterprise technology trends.",
+    "podcast": "Long-form interviews with founders, deep dives on tech trends, product retrospectives.",
+    "blog": "Detailed tutorials with code snippets, comparison tables, and benchmarks.",
+    "twitter": "Hot takes on launches, thread-format breakdowns of new tech, polls on preferences."
+  },
+  "engagement_rules": [
+    "Lead with the verdict or key finding — don't bury the lede",
+    "Use data, benchmarks, and specifics over subjective claims",
+    "Acknowledge trade-offs — audiences distrust pure hype",
+    "Include practical 'should you buy/use this?' recommendations",
+    "Reference competitor products for context"
+  ]
+}

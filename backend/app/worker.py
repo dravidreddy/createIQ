@@ -227,7 +227,6 @@ async def run_pipeline_async(
         final_cost = (state.values or {}).get("total_cost_cents", 0.0) if state else 0.0
         
         seq = await get_next_seq()
-        seq = await get_next_seq()
         await emit_event(metrics_event(thread_id, request_id, seq, ttft, total_latency, tps, final_cost))
 
         # 3. Standardized Termination

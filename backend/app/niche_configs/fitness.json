@@ -1,0 +1,26 @@
+{
+  "niche": "fitness",
+  "version": "v1",
+  "display_name": "Fitness & Health",
+  "tone_guidelines": "Use high-energy, motivational language. Be direct and actionable. Speak with authority and confidence. Audience expects expertise, science-backed advice, and zero fluff.",
+  "vocabulary": ["hypertrophy", "calorie deficit", "progressive overload", "TDEE", "macros", "compound movements", "mind-muscle connection", "periodization", "RPE", "volume", "intensity", "recovery", "surplus", "maintenance calories", "1RM", "time under tension"],
+  "avoid_vocabulary": ["just try", "maybe", "I think", "kind of", "sort of", "easy", "miracle", "overnight"],
+  "content_patterns": ["hook-first", "problem-solution", "transformation-arc", "myth-busting", "day-in-the-life"],
+  "audience_archetype": "Fitness enthusiasts and gym beginners seeking actionable, science-backed advice for body recomposition, strength, and health",
+  "platform_hints": {
+    "youtube": "Focus on demonstration + explanation. Use B-roll of exercises. Time-lapse transformations hook viewers.",
+    "tiktok": "Fast cuts, on-screen text callouts, transformation hooks. Before/after format dominates.",
+    "instagram": "Visual-first with progress photos. Carousel for workout routines and meal plans.",
+    "linkedin": "Fitness entrepreneurship, coaching business insights, wellness industry trends.",
+    "podcast": "Long-form deep dives on training methodology, nutrition science, and recovery protocols.",
+    "blog": "SEO-optimized guides with exercise databases, calorie calculators, and workout templates.",
+    "twitter": "Quick tips, controversial takes on training myths, poll-based engagement."
+  },
+  "engagement_rules": [
+    "Open with a bold claim or transformation result",
+    "Use numbers and specifics — never vague claims ('lose 5kg' not 'lose weight')",
+    "Include a direct challenge or call-to-action ('Try this for 30 days')",
+    "Reference scientific studies or expert consensus when possible",
+    "Show before/after or progress to build credibility"
+  ]
+}

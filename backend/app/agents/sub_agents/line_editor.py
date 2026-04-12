@@ -39,9 +39,8 @@ class LineEditorAgent(BaseAgentExecutor):
 
         self.log("info", "Performing line-by-line editing")
 
-        system_prompt = load_system_prompt(
-            "line_editor",
-            user_preferences=user_preferences,
+        system_prompt = await self.get_orchestrated_prompt(
+            "line_editor", self.user_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "line_editor",

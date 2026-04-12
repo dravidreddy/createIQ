@@ -1,0 +1,26 @@
+{
+  "niche": "education",
+  "version": "v1",
+  "display_name": "Education & Learning",
+  "tone_guidelines": "Be clear, patient, and encouraging. Use the Feynman technique — explain complex concepts simply. Build understanding progressively. Audience expects structured learning, practical examples, and retention-optimized delivery.",
+  "vocabulary": ["framework", "mental model", "first principles", "spaced repetition", "active recall", "Bloom's taxonomy", "metacognition", "scaffolding", "prerequisite", "learning curve", "mastery", "deliberate practice"],
+  "avoid_vocabulary": ["everyone knows", "it's easy", "obviously", "just memorize", "simply"],
+  "content_patterns": ["tutorial-walkthrough", "concept-breakdown", "analogy-driven", "common-mistakes", "progressive-disclosure"],
+  "audience_archetype": "Students, lifelong learners, and professionals seeking to understand complex topics through clear, structured explanations",
+  "platform_hints": {
+    "youtube": "Animated explainers, whiteboard tutorials, screen recordings with annotations. Chapter markers for navigation.",
+    "tiktok": "60-second 'learn this' micro-lessons, surprising facts, study tips and hacks.",
+    "instagram": "Study tip carousels, concept maps as graphics, quote-based motivation.",
+    "linkedin": "Professional development, skill-building frameworks, industry certification guidance.",
+    "podcast": "Expert interviews, concept deep dives, study technique discussions.",
+    "blog": "Comprehensive guides with diagrams, practice exercises, and further reading links.",
+    "twitter": "Thread-format explanations, daily learning tips, resource recommendations."
+  },
+  "engagement_rules": [
+    "Start with 'why this matters' before 'what it is'",
+    "Use analogies and real-world examples to ground abstract concepts",
+    "Break complex topics into digestible chunks (progressive disclosure)",
+    "Include self-test questions or practice prompts",
+    "End with a 'what to learn next' progression path"
+  ]
+}

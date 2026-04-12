@@ -2,38 +2,42 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { userApi } from '../services/api'
 import { Profile } from '../types'
-import {
-    User,
-    Save,
-    Loader2,
-    Sparkles,
-    Shield,
-    Globe
-} from 'lucide-react'
+import { User, Save, Loader2, Sparkles, Shield, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+const NICHES = ['Tech', 'Fitness', 'Finance', 'Education', 'Entertainment', 'Gaming', 'Lifestyle', 'Travel', 'Food', 'Beauty', 'Other']
+const STYLES = ['Educational', 'Entertaining', 'Inspirational', 'Casual', 'Professional', 'Storytelling', 'Tutorial']
+const HOOK_FRAMEWORKS = ['Problem-Agitate-Solve', 'Bold Claim + Proof', 'Question -> Story -> Lesson', 'Status Quo Interruption']
+const FORMALITY = ['Highly Casual', 'Neutral', 'Professional Academic']
+const PACING = ['Fast/High-Retention (MrBeast style)', 'Conversational/Relaxed', 'Educational/Step-by-Step']
+
 export default function Settings() {
-    const { user } = useAuthStore()
+    const { user, updateUser: updateAuthUser } = useAuthStore()
     const [profile, setProfile] = useState<Profile | null>(null)
+    const [displayName, setDisplayName] = useState(user?.display_name || '')
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [isSavingUser, setIsSavingUser] = useState(false)
     const [activeTab, setActiveTab] = useState<'persona' | 'account' | 'security' | 'connections'>('persona')
 
     useEffect(() => {
+        if (user) {
+            setDisplayName(user.display_name)
+        }
+        
         const timeout = setTimeout(() => {
             if (isLoading) {
                 console.warn("Settings profile load timed out");
                 setIsLoading(false);
             }
-        }, 5000); // 5s safety timeout
+        }, 5000);
 
         loadProfile()
         return () => clearTimeout(timeout)
-    }, [])
+    }, [user])
 
     const loadProfile = async () => {
         try {
-            // Check if user even has a profile indicated
             if (user && !user.has_profile) {
                 console.log("User marked as not having profile, skipping load");
                 setIsLoading(false);
@@ -44,7 +48,6 @@ export default function Settings() {
             setProfile(data)
         } catch (error: any) {
             console.error("Failed to load profile:", error)
-            // If 404, the user might need to setup
             if (error.response?.status === 404) {
                 toast.error("Profile not found. Please complete setup.")
             }
@@ -65,13 +68,32 @@ export default function Settings() {
                 target_audience: profile.target_audience,
                 typical_video_length: profile.typical_video_length as any,
                 preferred_language: profile.preferred_language,
-                additional_context: profile.additional_context
+                additional_context: profile.additional_context,
+                vocabulary: profile.vocabulary,
+                avoid_words: profile.avoid_words,
+                formality_level: profile.formality_level,
+                hook_framework: profile.hook_framework,
+                default_cta: profile.default_cta,
+                pacing_style: profile.pacing_style,
             })
-            toast.success('Preferences synchronized')
+            toast.success('AI Persona synchronized')
         } catch (error) {
-            toast.error('Failed to save profile')
+            toast.error('Failed to save persona profile')
         } finally {
             setIsSaving(false)
+        }
+    }
+
+    const handleSaveAccount = async () => {
+        setIsSavingUser(true)
+        try {
+            const updatedUser = await userApi.updateUser({ display_name: displayName })
+            updateAuthUser({ display_name: updatedUser.display_name })
+            toast.success('Account Identity updated')
+        } catch (error) {
+            toast.error('Failed to update account identity')
+        } finally {
+            setIsSavingUser(false)
         }
     }
 
@@ -124,8 +146,25 @@ export default function Settings() {
                     {/* Account Section */}
                     {activeTab === 'account' && (
                     <section className="space-y-6 animate-fade-in">
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
-                            Identity
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
+                                Identity
+                            </div>
+                            <button
+                                onClick={handleSaveAccount}
+                                disabled={isSavingUser || displayName === user?.display_name}
+                                className="btn-primary py-1.5 px-4 text-xs gap-2"
+                                data-testid="settings-save-account-btn"
+                            >
+                                {isSavingUser ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Save className="w-3.5 h-3.5" />
+                                        Save Changes
+                                    </>
+                                )}
+                            </button>
                         </div>
                         <div className="card-minimal space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -133,9 +172,10 @@ export default function Settings() {
                                     <label className="text-xs text-text-secondary font-mono">Display Name</label>
                                     <input
                                         type="text"
-                                        value={user?.display_name || ''}
+                                        value={displayName}
+                                        onChange={(e) => setDisplayName(e.target.value)}
                                         className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
-                                        disabled
+                                        placeholder="Creator Name"
                                         data-testid="settings-display-name"
                                     />
                                 </div>
@@ -144,7 +184,7 @@ export default function Settings() {
                                     <input
                                         type="email"
                                         value={user?.email || ''}
-                                        className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                        className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors opacity-50 cursor-not-allowed"
                                         disabled
                                         data-testid="settings-email"
                                     />
@@ -179,18 +219,37 @@ export default function Settings() {
                             </div>
 
                             <div className="card-minimal space-y-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary font-mono">Domain Niche</label>
-                                        <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary font-medium">
-                                            {profile.content_niche}
-                                        </div>
+                                        <select
+                                            value={profile.content_niche || ''}
+                                            onChange={(e) => setProfile({ ...profile, content_niche: e.target.value })}
+                                            className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                        >
+                                            {NICHES.map((niche) => <option key={niche} value={niche}>{niche}</option>)}
+                                        </select>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary font-mono">Content Tone</label>
-                                        <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary font-medium">
-                                            {profile.content_style}
-                                        </div>
+                                        <select
+                                            value={profile.content_style || ''}
+                                            onChange={(e) => setProfile({ ...profile, content_style: e.target.value })}
+                                            className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                        >
+                                            {STYLES.map((style) => <option key={style} value={style}>{style}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs text-text-secondary font-mono">Formality Level</label>
+                                        <select
+                                            value={profile.formality_level || ''}
+                                            onChange={(e) => setProfile({ ...profile, formality_level: e.target.value })}
+                                            className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                        >
+                                            <option value="">Default (Derived from Tone)</option>
+                                            {FORMALITY.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                                        </select>
                                     </div>
                                 </div>
 
@@ -202,18 +261,84 @@ export default function Settings() {
                                         onChange={(e) => setProfile({ ...profile, target_audience: e.target.value })}
                                         className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
                                         placeholder="Target demographic, pain points, interests..."
-                                        data-testid="settings-audience-input"
                                     />
                                 </div>
 
+                                <hr className="border-white/5" />
+
+                                <div className="space-y-6">
+                                    <h4 className="text-sm font-semibold text-text-primary">Content Constraints (Brand Voice)</h4>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">Signature Vocabulary (Comma Separated)</label>
+                                            <input
+                                                type="text"
+                                                value={profile.vocabulary || ''}
+                                                onChange={(e) => setProfile({ ...profile, vocabulary: e.target.value })}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                                placeholder="e.g. Level up, Creator economy, Let's dive in"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">Negative Constraints (Words to Avoid)</label>
+                                            <input
+                                                type="text"
+                                                value={profile.avoid_words || ''}
+                                                onChange={(e) => setProfile({ ...profile, avoid_words: e.target.value })}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                                placeholder="e.g. Delve, In today's fast-paced world, Furthermore"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr className="border-white/5" />
+
+                                <div className="space-y-6">
+                                    <h4 className="text-sm font-semibold text-text-primary">Strategic Frameworks</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">Hook Framework</label>
+                                            <select
+                                                value={profile.hook_framework || ''}
+                                                onChange={(e) => setProfile({ ...profile, hook_framework: e.target.value })}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                            >
+                                                <option value="">AI Automated</option>
+                                                {HOOK_FRAMEWORKS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-secondary font-mono">Pacing Style</label>
+                                            <select
+                                                value={profile.pacing_style || ''}
+                                                onChange={(e) => setProfile({ ...profile, pacing_style: e.target.value })}
+                                                className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors"
+                                            >
+                                                <option value="">Standard Pacing</option>
+                                                {PACING.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs text-text-secondary font-mono">Default Call-To-Action (CTA)</label>
+                                        <input
+                                            type="text"
+                                            value={profile.default_cta || ''}
+                                            onChange={(e) => setProfile({ ...profile, default_cta: e.target.value })}
+                                            className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20"
+                                            placeholder="e.g. Subscribe to my newsletter in the description"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-3">
-                                    <label className="text-xs text-text-secondary font-mono">Style Constraints & Guidance</label>
+                                    <label className="text-xs text-text-secondary font-mono">Additional Context & Rule Prompts</label>
                                     <textarea
                                         value={profile.additional_context || ''}
                                         onChange={(e) => setProfile({ ...profile, additional_context: e.target.value })}
                                         className="w-full bg-white/5 border-white/10 rounded-lg px-4 py-6 text-sm text-text-primary focus:border-accent/50 transition-colors placeholder:text-text-secondary/20 min-h-[160px] resize-none leading-relaxed"
-                                        placeholder="Input specific rules, preferred phrases, or structural requirements for the AI to follow..."
-                                        data-testid="settings-context-textarea"
+                                        placeholder="Input specific rules, tone directions, or structural requirements for the AI to follow..."
                                     />
                                 </div>
                             </div>

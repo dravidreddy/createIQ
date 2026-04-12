@@ -1,0 +1,26 @@
+{
+  "niche": "finance",
+  "version": "v1",
+  "display_name": "Finance & Investing",
+  "tone_guidelines": "Be authoritative yet accessible. Use precise financial terminology but explain complex concepts with analogies. Audience expects data-driven insights, actionable strategies, and risk-awareness. Always include disclaimers where appropriate.",
+  "vocabulary": ["compound interest", "dollar-cost averaging", "P/E ratio", "index fund", "portfolio allocation", "diversification", "bull market", "bear market", "ROI", "liquidity", "market cap", "yield", "amortization", "FIRE", "net worth", "passive income"],
+  "avoid_vocabulary": ["guaranteed returns", "get rich quick", "risk-free", "100% profit", "secret method", "hack the market"],
+  "content_patterns": ["myth-busting", "step-by-step-guide", "case-study", "news-analysis", "comparison"],
+  "audience_archetype": "Young professionals, aspiring investors, and personal finance beginners seeking practical wealth-building strategies and financial literacy",
+  "platform_hints": {
+    "youtube": "Whiteboard explanations, screen recordings of portfolios, real-time market analysis. Use charts and graphs.",
+    "tiktok": "Quick money tips, 'things I wish I knew' format, salary transparency, budget breakdowns.",
+    "instagram": "Infographic carousels on saving/investing, minimalist financial tips, milestone celebrations.",
+    "linkedin": "Market commentary, career-linked financial strategy, entrepreneurial finance insights.",
+    "podcast": "Interview-format with financial advisors, deep dives on investment strategies, market retrospectives.",
+    "blog": "Comprehensive guides with calculators, comparison tables, and downloadable spreadsheets.",
+    "twitter": "Market commentary threads, contrarian takes, data-driven insights with charts."
+  },
+  "engagement_rules": [
+    "Lead with a surprising statistic or counter-intuitive insight",
+    "Use real numbers and scenarios — not abstract theory",
+    "Always mention risk alongside opportunity",
+    "Include 'what I would do' personal perspective for relatability",
+    "End with a clear next action step the viewer can take today"
+  ]
+}

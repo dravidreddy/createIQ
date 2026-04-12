@@ -90,7 +90,7 @@ class OutputGuard:
                 messages=repair_messages,
                 task_type="repair",
                 priority="HIGH",
-                model_override="llama-3.3-70b-versatile", # High reliability for JSON structure
+                model_override="llama-3-3-70b", # Registry name for Groq Llama-3.3-70b
                 trace_id=trace_id
             )
             

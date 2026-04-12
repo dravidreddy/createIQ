@@ -185,7 +185,12 @@ class AnthropicProvider(BaseLLMProvider):
                                 is_complete=False,
                                 model=self._model_name
                             )
-                        # TODO: Tool stream delta support if needed
+                        elif event.type == "content_block_delta" and event.delta.type == "input_json_delta":
+                            yield LLMStreamChunk(
+                                content=event.delta.partial_json,
+                                is_complete=False,
+                                model=self._model_name
+                            )
                 
                 yield LLMStreamChunk(content="", is_complete=True)
 

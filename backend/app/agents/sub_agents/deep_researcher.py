@@ -14,6 +14,7 @@ from app.llm.base import LLMMessage
 from app.tools.search import get_tavily_tool
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.utils.context_pruner import ContextPruner
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,12 @@ class DeepResearcherAgent(BaseAgentExecutor):
         context = await search_tool.search_context(f"{topic} comprehensive guide")
 
         # 3. Synthesize with LLM
-        system_prompt = load_system_prompt("deep_researcher")
+        pruner = ContextPruner()
+        all_results = pruner.prune_context_chunks(all_results, max_tokens=4000)
+
+        system_prompt = await self.get_orchestrated_prompt(
+            "deep_researcher", {"topic": topic}, {}
+        )
         user_prompt = load_user_prompt(
             "deep_researcher",
             topic=topic,
@@ -88,6 +94,9 @@ class DeepResearcherAgent(BaseAgentExecutor):
                 content=f"{user_prompt}\n\n## Research Data:\n{research_text}\n\n## Extended Context:\n{context[:3000]}",
             ),
         ]
+
+        # Prune total message history for Groq's 32k limit
+        messages = pruner.prune_messages(messages, max_tokens=28000)
 
         response = await self.llm_generate(messages, task_type="quality", max_tokens=4096)
         result = parse_llm_json(response.content, fallback={

@@ -238,3 +238,72 @@ class BaseAgentExecutor(BaseAgent):
         # update_metrics is defined in BaseAgent
         self.update_metrics(response)
         return response
+
+    # ── NAPOS: Orchestrated prompt composition ──────────────────
+
+    async def get_orchestrated_prompt(
+        self,
+        agent_name: str,
+        project_context: Dict[str, Any],
+        user_preferences: Dict[str, Any],
+        prompt_version: str = None,
+        memory_context: str = "",
+        user_id: str = None,
+        thread_id: str = None,
+    ) -> str:
+        """Build a multi-layer system prompt using the NAPOS orchestrator.
+
+        Composes: System Layer + Niche Layer + User Layer + Task Layer + Memory Layer.
+        Falls back to the legacy load_system_prompt() if the orchestrator fails.
+
+        Args:
+            agent_name: Agent identifier (matches YAML filename)
+            project_context: Project configuration dict
+            user_preferences: Learned user preferences dict
+            prompt_version: Optional specific prompt version
+            memory_context: Pre-built memory context string
+            user_id: For memory layer retrieval
+            thread_id: For memory layer retrieval
+
+        Returns:
+            Composed multi-layer system prompt string
+        """
+        try:
+            from app.utils.prompt_orchestrator import get_prompt_orchestrator
+            orchestrator = get_prompt_orchestrator()
+            niche = project_context.get("niche", project_context.get("content_niche", "general"))
+
+            prompt = await orchestrator.build_system_prompt(
+                agent_name=agent_name,
+                niche=niche,
+                user_preferences=user_preferences,
+                project_context=project_context,
+                prompt_version=prompt_version,
+                memory_context=memory_context,
+                user_id=user_id,
+                thread_id=thread_id,
+            )
+
+            # Store composition metadata for pipeline state tracking
+            meta = orchestrator.get_last_composition_meta()
+            self.current_prompt_version = meta.get("prompt_hash", "napos")
+
+            return prompt
+
+        except Exception as e:
+            # Graceful degradation: fall back to legacy prompt loading
+            logger.warning(
+                "NAPOS: Orchestrator failed for %s, falling back to legacy: %s",
+                agent_name, e
+            )
+            from app.utils.prompt_loader import load_system_prompt
+            safe_context = {
+                k: v for k, v in project_context.items()
+                if k not in ("user_preferences", "version", "agent_name", "prompt_key")
+            }
+            return load_system_prompt(
+                agent_name,
+                version=prompt_version,
+                user_preferences=user_preferences,
+                **safe_context,
+            )

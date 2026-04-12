@@ -28,6 +28,9 @@ versions:
       }
 
     user_prompt: |
-      Synthesize 5 Viral Concept: "{{ topic }}". 
-      Research context includes: {{ research_results }}
-      Platforms: {{ platforms | join(', ') }}.
+      Synthesize 5 Viral Concepts: "{{ topic }}". 
+      Research context:
+      {% for r in research_results[:8] %}
+      - {{ r.get('topic', r.get('title', 'Topic')) }}: {{ r.get('trending_reason', r.get('content', ''))[:200] }}
+      {% endfor %}
+      Platforms: {{ platforms | join(', ') if platforms else 'YouTube' }}.

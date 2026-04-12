@@ -37,5 +37,8 @@ from app.models.artifact import ProjectArtifact
 from app.models.session import AgentSession
 from app.models.project_version import ProjectVersion
 
+# NAPOS
+from app.models.niche_config import NicheConfigModel
+
 # Database lifecycle
 from app.models.database import init_db, close_db

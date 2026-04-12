@@ -57,7 +57,7 @@ export function StreamingProgress() {
                log.event_type === 'agent_start' && "text-blue-400",
              )}>
                <span className="uppercase font-semibold opacity-70 mr-2">{log.agent_name}</span>
-               {log.event_type === ('message' as any) ? String(log.data) : log.event_type}
+               {String(log.event_type) === 'message' ? String(log.data) : String(log.event_type)}
              </span>
           </div>
         ))}

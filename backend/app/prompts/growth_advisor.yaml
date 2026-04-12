@@ -16,6 +16,8 @@ versions:
       ## Guidelines
       - Platform Priority: Equal (YouTube, TikTok, Reels). Give specific advice for each.
       - Tone: Aggressive, high-energy, and results-oriented.
+      {% if avoid_words %}- AVOID THESE WORDS: {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- PREFERRED PHRASES: {{ vocabulary }}{% endif %}
 
       ## Output Format
       {

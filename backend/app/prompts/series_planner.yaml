@@ -13,6 +13,8 @@ versions:
       - Create cliffhangers / teasers between parts
       - Plan for audience growth at each stage
       - Connect parts thematically while each stands alone
+      {% if avoid_words %}- AVOID THESE WORDS: {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- PREFERRED PHRASES: {{ vocabulary }}{% endif %}
 
       ## Output Format
       Return a JSON object:

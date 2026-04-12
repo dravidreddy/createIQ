@@ -62,13 +62,16 @@ class TavilySearchTool:
         try:
             logger.info("Searching: %s", query)
 
-            response = await asyncio.to_thread(
-                self.client.search,
-                query=query,
-                search_depth=search_depth,
-                max_results=max_results,
-                include_domains=include_domains or [],
-                exclude_domains=exclude_domains or [],
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    self.client.search,
+                    query=query,
+                    search_depth=search_depth,
+                    max_results=max_results,
+                    include_domains=include_domains or [],
+                    exclude_domains=exclude_domains or [],
+                ),
+                timeout=15.0
             )
 
             results = {
@@ -102,11 +105,14 @@ class TavilySearchTool:
     ) -> str:
         """Search and return formatted context for LLM (non-blocking)."""
         try:
-            context = await asyncio.to_thread(
-                self.client.get_search_context,
-                query=query,
-                search_depth=search_depth,
-                max_tokens=max_tokens,
+            context = await asyncio.wait_for(
+                asyncio.to_thread(
+                    self.client.get_search_context,
+                    query=query,
+                    search_depth=search_depth,
+                    max_tokens=max_tokens,
+                ),
+                timeout=15.0
             )
             return context
         except Exception as e:
@@ -116,9 +122,12 @@ class TavilySearchTool:
     async def search_qna(self, query: str) -> str:
         """Get a direct answer to a question (non-blocking)."""
         try:
-            answer = await asyncio.to_thread(
-                self.client.qna_search,
-                query=query,
+            answer = await asyncio.wait_for(
+                asyncio.to_thread(
+                    self.client.qna_search,
+                    query=query,
+                ),
+                timeout=15.0
             )
             return answer
         except Exception as e:

@@ -25,6 +25,8 @@ versions:
       - Tone: {{ user_preferences.get('tone', 'enthusiastic') }}
       - Engagement: {{ user_preferences.get('engagement_style', 'aggressive') }}
       {% endif %}
+      {% if avoid_words %}- AVOID THESE WORDS: {{ avoid_words }}{% endif %}
+      {% if vocabulary %}- PREFERRED PHRASES: {{ vocabulary }}{% endif %}
 
       ## Output Format
       {

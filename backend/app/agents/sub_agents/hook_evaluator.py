@@ -39,7 +39,9 @@ class HookEvaluatorAgent(BaseAgentExecutor):
 
         self.log("info", f"Evaluating {len(hooks)} hooks")
 
-        system_prompt = load_system_prompt("hook_evaluator")
+        system_prompt = await self.get_orchestrated_prompt(
+            "hook_evaluator", {}, {}
+        )
         user_prompt = load_user_prompt("hook_evaluator", hooks=hooks)
 
         messages = [

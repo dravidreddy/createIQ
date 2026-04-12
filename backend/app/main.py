@@ -64,6 +64,14 @@ async def lifespan(app: FastAPI):
     # Eagerly initialize core application collections (Moved from infrastructure.py)
     await initialize_vector_store()
 
+    # NAPOS: Seed niche configs from JSON → MongoDB
+    try:
+        from app.niche_configs import seed_niche_configs
+        seeded = await seed_niche_configs()
+        logger.info("NAPOS: Niche config seeding complete (%d new configs)", seeded)
+    except Exception as e:
+        logger.warning("NAPOS: Niche config seeding failed (non-fatal): %s", e)
+
     # 4. Model Warmup (Phase 3)
     try:
         from app.llm.router import get_llm_router

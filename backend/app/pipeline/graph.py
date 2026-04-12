@@ -75,8 +75,10 @@ def budget_guard(node_func):
 
 
 async def load_memory_node(state: PipelineState) -> PipelineState:
-    """Load UserPreferences + ProjectContext from memory service."""
+    """Load UserPreferences + ProjectContext from memory service, then resolve NAPOS niche."""
     memory = MemoryService()
+    from app.services.user import UserService
+    user_service = UserService()
 
     user_prefs = await memory.get_user_preferences(state.get("user_id", ""))
 
@@ -86,10 +88,42 @@ async def load_memory_node(state: PipelineState) -> PipelineState:
         db_ctx = await memory.get_project_context(state.get("project_id", ""))
         project_ctx = {**db_ctx, **project_ctx}
 
+    # Merge User Profile Context (Brand Voice, Persona)
+    user_profile_ctx = await user_service.get_profile_context(state.get("user_id", ""))
+    if user_profile_ctx:
+        profile_dict = user_profile_ctx.model_dump()
+        # Do not overwrite explicit project context fields like topic/niche if they exist,
+        # but do inject missing persona fields
+        for k, v in profile_dict.items():
+            if v and not project_ctx.get(k):
+                project_ctx[k] = v
+
+    # NAPOS: Resolve niche via inference if not explicitly set
+    from app.utils.niche_inference import infer_niche
+    napos_niche = state.get("napos_niche") or project_ctx.get("niche")
+    if not napos_niche or napos_niche.lower() in ("general", "other", ""):
+        profile_niche = None
+        if user_profile_ctx:
+            profile_niche = user_profile_ctx.content_niche
+        napos_niche = infer_niche(
+            topic=project_ctx.get("topic", ""),
+            user_profile_niche=profile_niche,
+        )
+    else:
+        napos_niche = napos_niche.lower().strip()
+
+    # Ensure niche is also in project_context for downstream agents
+    project_ctx["niche"] = napos_niche
+
+    # Initialize NAPOS orchestrator with memory service
+    from app.utils.prompt_orchestrator import get_prompt_orchestrator
+    get_prompt_orchestrator(memory_service=memory)
+
     return {
         **state,
         "user_preferences": user_prefs,
         "project_context": project_ctx,
+        "napos_niche": napos_niche,
         "current_stage": "load_memory",
     }
 

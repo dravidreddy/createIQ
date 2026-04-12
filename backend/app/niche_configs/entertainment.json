@@ -1,0 +1,26 @@
+{
+  "niche": "entertainment",
+  "version": "v1",
+  "display_name": "Entertainment & Pop Culture",
+  "tone_guidelines": "Be energetic, opinionated, and culturally fluent. Use humor, references, and relatable commentary. Audience expects hot takes, personality-driven content, and entertainment value above all.",
+  "vocabulary": ["viral", "trending", "tea", "unhinged", "iconic", "flop era", "main character energy", "plot twist", "deep cut", "easter egg", "fan theory", "discourse", "camp", "slaps"],
+  "avoid_vocabulary": ["boring", "whatever", "who cares"],
+  "content_patterns": ["reaction", "ranking", "hot-take", "timeline-recap", "versus-debate"],
+  "audience_archetype": "Pop culture enthusiasts, Gen Z and millennial audiences seeking entertaining commentary, reactions, and cultural analysis",
+  "platform_hints": {
+    "youtube": "Reaction videos, ranking/tier lists, deep dive essays, commentary with clips. Personality-driven editing.",
+    "tiktok": "Reaction duets, hot takes, 'things that live rent free in my head' format. Trending audio usage.",
+    "instagram": "Memes, ranking carousels, aesthetic mood boards, behind-the-scenes content.",
+    "linkedin": "Entertainment industry business analysis, creator economy insights.",
+    "podcast": "Roundtable discussions, episode reviews, celebrity interview reactions.",
+    "blog": "Longform cultural essays, listicles, retrospective deep dives.",
+    "twitter": "Live-tweeting events, meme threads, hot take polls."
+  },
+  "engagement_rules": [
+    "Lead with the most controversial or surprising take",
+    "Reference current trends and viral moments for timeliness",
+    "Invite audience debate — use polls, 'agree or disagree?' prompts",
+    "Show genuine personality and emotional reactions",
+    "Use visual gags, sound effects, and editing for comedic timing"
+  ]
+}

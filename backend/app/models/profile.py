@@ -26,6 +26,12 @@ class ProfileEmbed(BaseModel):
     typical_video_length: str = ""
     preferred_language: str = "English"
     additional_context: Optional[str] = None
+    vocabulary: Optional[str] = None
+    avoid_words: Optional[str] = None
+    formality_level: Optional[str] = None
+    hook_framework: Optional[str] = None
+    default_cta: Optional[str] = None
+    pacing_style: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -49,6 +55,12 @@ class UserProfile(Document):
 
     # Extended personalisation
     default_tone: Optional[str] = None
+    vocabulary: Optional[str] = None
+    avoid_words: Optional[str] = None
+    formality_level: Optional[str] = None
+    hook_framework: Optional[str] = None
+    default_cta: Optional[str] = None
+    pacing_style: Optional[str] = None
     preferences: dict = Field(default_factory=dict)
 
     created_at: datetime = Field(default_factory=datetime.utcnow)

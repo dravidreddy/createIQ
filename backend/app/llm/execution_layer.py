@@ -24,10 +24,10 @@ from app.llm.base import (
     LLMRateLimitError,
     LLMProviderDownError,
     LLMInvalidRequestError,
-    LLMBudgetExceededError
+    LLMBudgetExceededError,
+    LLMNotExecutedError,
+    TokenUsageMissingError,
 )
-# We will use base_mod.LLMNotExecutedError and base_mod.TokenUsageMissingError 
-# to avoid potential NameErrors if the import was interrupted.
 
 from app.llm.output_guard import OutputGuard
 from app.llm.usage_tracker import usage_tracker
@@ -332,6 +332,9 @@ class ExecutionLayer:
                 logger.error(f"[{request_id}] ExecutionLayer: {name} failed validation: {e}")
                 await self.router.record_failure(name)
                 last_error = e
+                idx = providers_to_try.index(name)
+                if idx < len(providers_to_try) - 1:
+                    execution_trace.append(f"fallback_triggered:{name}->{providers_to_try[idx+1]}")
                 continue # Try next provider in fallback chain
 
             except Exception as e:
@@ -339,10 +342,10 @@ class ExecutionLayer:
                 last_error = e
                 logger.error(f"[{request_id}] ExecutionLayer: Error on {name}: {e}")
                 await self.router.record_failure(name)
+                idx = providers_to_try.index(name)
+                if idx < len(providers_to_try) - 1:
+                    execution_trace.append(f"fallback_triggered:{name}->{providers_to_try[idx+1]}")
                 continue # Try next provider in fallback chain
-            
-            if name != providers_to_try[-1]:
-                execution_trace.append(f"fallback_triggered:{name}->{providers_to_try[providers_to_try.index(name)+1]}")
             
         raise last_error or LLMError("All providers in execution chain failed.")
 

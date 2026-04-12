@@ -40,9 +40,8 @@ class PacingOptimizerAgent(BaseAgentExecutor):
 
         self.log("info", "Optimizing pacing")
 
-        system_prompt = load_system_prompt(
-            "pacing_optimizer",
-            user_preferences=user_preferences,
+        system_prompt = await self.get_orchestrated_prompt(
+            "pacing_optimizer", self.user_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "pacing_optimizer",

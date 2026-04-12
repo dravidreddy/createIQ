@@ -38,7 +38,9 @@ class EngagementBoosterAgent(BaseAgentExecutor):
 
         self.log("info", "Boosting engagement elements")
 
-        system_prompt = load_system_prompt("engagement_booster")
+        system_prompt = await self.get_orchestrated_prompt(
+            "engagement_booster", self.user_context, {}
+        )
         user_prompt = load_user_prompt(
             "engagement_booster",
             script=edited_script[:6000],

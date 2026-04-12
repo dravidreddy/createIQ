@@ -66,8 +66,19 @@ class PromptManager:
     def track_prompt_metadata(self, agent_name: str, version: Optional[str] = None) -> Dict[str, Any]:
         """Return metadata for inclusion in PipelineState/Logs."""
         meta = get_prompt_metadata(agent_name)
+
+        # Include NAPOS composition info if available
+        napos_meta = {}
+        try:
+            from app.utils.prompt_orchestrator import get_prompt_orchestrator
+            orchestrator = get_prompt_orchestrator()
+            napos_meta = orchestrator.get_last_composition_meta()
+        except Exception:
+            pass
+
         return {
             "agent": agent_name,
             "version": version or self.get_version(agent_name) or "latest",
-            "available_versions": meta.get("versions", [])
+            "available_versions": meta.get("versions", []),
+            "napos": napos_meta,
         }
