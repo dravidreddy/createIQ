@@ -81,13 +81,13 @@ class Settings(BaseSettings):
 
     @property
     def cookie_secure(self) -> bool:
-        """HTTPS-only cookies in production."""
-        return self.env.lower() == "prod"
+        """HTTPS-only cookies when not explicitly disabled (Defaults True for deployed)."""
+        return os.environ.get("COOKIE_SECURE", "true").lower() == "true"
 
     @property
     def cookie_samesite(self) -> str:
-        """SameSite=None is required for cross-domain cookie propagation in production."""
-        return "none" if self.env.lower() == "prod" else "lax"
+        """SameSite=None is required for cross-domain. Defaults 'none' for deployed."""
+        return os.environ.get("COOKIE_SAMESITE", "none").lower()
 
     # ─── LLM Providers ───────────────────────────────────────────
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
