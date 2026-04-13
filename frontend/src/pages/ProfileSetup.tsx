@@ -98,7 +98,7 @@ export default function ProfileSetup() {
             await userApi.createProfile({
                 content_niche: 'Other',
                 custom_niche: 'Skipped',
-                primary_platforms: [],
+                primary_platforms: ['YouTube'], // Must have at least 1 platform to pass backend min_length validation
                 content_style: 'Casual',
                 target_audience: '',
                 typical_video_length: 'Mixed',
