@@ -91,9 +91,30 @@ export default function ProfileSetup() {
         }
     }
 
-    const handleSkip = () => {
-        updateUser({ has_profile: true })
-        navigate('/dashboard')
+    const handleSkip = async () => {
+        setIsLoading(true)
+        try {
+            // Send empty/default profile to backend so it permanently registers has_profile = true
+            await userApi.createProfile({
+                content_niche: 'Other',
+                custom_niche: 'Skipped',
+                primary_platforms: [],
+                content_style: 'Casual',
+                target_audience: '',
+                typical_video_length: 'Mixed',
+                preferred_language: 'English',
+                additional_context: ''
+            });
+            updateUser({ has_profile: true })
+            navigate('/dashboard')
+        } catch (error) {
+            console.error("Failed to skip profile", error)
+            // Even if it fails, let them proceed locally to avoid blocking them
+            updateUser({ has_profile: true })
+            navigate('/dashboard')
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const togglePlatform = (platform: Platform) => {
