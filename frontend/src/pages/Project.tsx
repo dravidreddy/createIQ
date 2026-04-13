@@ -42,7 +42,10 @@ export default function Project() {
                 toast.error('Failed to load project');
                 navigate('/dashboard');
             });
-            checkPipelineStatus(`${id}:current`).catch(console.error);
+            // Only check pipeline status if there's a real thread from a previous session
+            if (threadId) {
+                checkPipelineStatus(threadId).catch(console.error);
+            }
         }
     }, [id]);
 
