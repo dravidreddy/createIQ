@@ -143,8 +143,9 @@ class QdrantVectorStore:
 
         try:
             result = await self._genai_client.aio.models.embed_content(
-                model="models/text-embedding-004",
+                model="gemini-embedding-001",
                 contents=text[:2000],  # Truncate to avoid token limits
+                config={"output_dimensionality": self.VECTOR_SIZE},  # Match Qdrant collection (768)
             )
             return result.embeddings[0].values
         except Exception as e:
