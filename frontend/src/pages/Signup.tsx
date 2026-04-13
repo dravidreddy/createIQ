@@ -43,11 +43,20 @@ export default function Signup() {
             toast.success('Account created! Let\'s set up your profile.')
             navigate('/profile-setup')
         } catch (error: any) {
+            console.error('Signup error:', error);
             if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
                 toast.error('Network Error: The backend server is unreachable.')
+            } else if (error.code && error.code.startsWith('auth/')) {
+                // Firebase error
+                if (error.code === 'auth/email-already-in-use') {
+                    toast.error('Email is already in use. Please sign in instead.');
+                } else if (error.code === 'auth/weak-password') {
+                    toast.error('Password is too weak. Please use a stronger password.');
+                } else {
+                    toast.error(error.message || 'Authentication failed');
+                }
             } else {
-                // Try to get message from interceptor-enriched error, then CreatorResponse, then fallback
-                const message = error.message || error.response?.data?.error?.message || error.response?.data?.detail || 'Signup failed';
+                const message = error.response?.data?.error?.message || error.response?.data?.detail || error.message || 'Signup failed';
                 toast.error(message);
             }
         }

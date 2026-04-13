@@ -31,10 +31,18 @@ export default function Login() {
             toast.success('Welcome back!')
             navigate('/dashboard')
         } catch (error: any) {
+            console.error('Login error:', error);
             if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
                 toast.error('Network Error: The backend server is unreachable.')
+            } else if (error.code && error.code.startsWith('auth/')) {
+                // Firebase error
+                if (error.code === 'auth/invalid-credential') {
+                    toast.error('Invalid email or password. Note: Old accounts may need to re-register.');
+                } else {
+                    toast.error(error.message || 'Authentication failed');
+                }
             } else {
-                const message = error.response?.data?.error?.message || error.response?.data?.detail || 'Login failed';
+                const message = error.response?.data?.error?.message || error.response?.data?.detail || error.message || 'Login failed';
                 toast.error(message);
             }
         }
