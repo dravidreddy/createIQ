@@ -44,7 +44,7 @@ def _get_redis():
         _redis_client = get_redis()
     except Exception as exc:
         logger.error(f"Rate limiter: Redis initialization failed ({exc}).")
-        if get_settings().env == "prod":
+        if get_settings().is_prod:
             # During init we keep the error if in prod, but rate_limit will fail-open later
             raise
             

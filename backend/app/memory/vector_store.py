@@ -139,7 +139,7 @@ class QdrantVectorStore:
         if not self._genai_client:
             # Fallback: return zero vector
             logger.warning("QdrantVectorStore: no embedding client — returning zero vector")
-            return [0.0] * self.VECTOR_SIZE
+            return []
 
         try:
             result = await self._genai_client.aio.models.embed_content(
@@ -150,7 +150,7 @@ class QdrantVectorStore:
             return result.embeddings[0].values
         except Exception as e:
             logger.error("QdrantVectorStore: embedding failed — %s", e)
-            return [0.0] * self.VECTOR_SIZE
+            return []
 
     async def upsert(
         self,
@@ -178,6 +178,8 @@ class QdrantVectorStore:
             await self.init_collection()
 
         embedding = await self._get_embedding(content)
+        if not embedding:
+            return ""
         point_id = get_uuid()
 
         payload = {
@@ -253,11 +255,12 @@ class QdrantVectorStore:
             await self.init_collection()
 
         query_vector = await self._get_embedding(query)
+        if not query_vector:
+            return []
 
         # Build filter
         must_conditions = [
             qmodels.FieldCondition(key="user_id", match=qmodels.MatchValue(value=user_id)),
-            qmodels.FieldCondition(key="thread_id", match=qmodels.MatchValue(value=thread_id))
         ]
         if project_id:
             must_conditions.append(qmodels.FieldCondition(key="project_id", match=qmodels.MatchValue(value=project_id)))
@@ -297,6 +300,8 @@ class QdrantVectorStore:
             
             # Recency Boost: linear decay over 7 days
             boost = 0.0
+            if thread_id and hit.payload.get("thread_id") == thread_id:
+                boost += 0.05
             if created_at_str:
                 try:
                     created_at = datetime.fromisoformat(created_at_str)

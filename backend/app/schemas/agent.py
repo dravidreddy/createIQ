@@ -6,7 +6,7 @@ Pydantic schemas for agent execution and streaming events.
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class AgentExecutionRequest(BaseModel):
@@ -44,7 +44,7 @@ class AgentStreamEvent(BaseModel):
     ]
     agent_name: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    data: Dict[str, Any] = {}
+    data: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ToolCallEvent(BaseModel):
@@ -80,7 +80,7 @@ class AgentSessionResponse(BaseModel):
     status: str
     input_data: Optional[Dict[str, Any]] = None
     output_data: Optional[Dict[str, Any]] = None
-    execution_logs: List[Dict[str, Any]] = []
+    execution_logs: List[Dict[str, Any]] = Field(default_factory=list)
     input_tokens: int = 0
     output_tokens: int = 0
     execution_time_seconds: Optional[float] = None
@@ -88,8 +88,7 @@ class AgentSessionResponse(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PipelineStatus(BaseModel):
@@ -97,7 +96,7 @@ class PipelineStatus(BaseModel):
     project_id: int
     status: str
     current_agent: Optional[str] = None
-    completed_agents: List[str] = []
-    pending_agents: List[str] = []
+    completed_agents: List[str] = Field(default_factory=list)
+    pending_agents: List[str] = Field(default_factory=list)
     progress_percentage: float
     estimated_time_remaining: Optional[str] = None

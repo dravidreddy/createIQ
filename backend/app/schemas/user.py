@@ -16,9 +16,9 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    """Schema for user registration."""
+    """Schema for user registration via Firebase."""
     model_config = ConfigDict(extra="forbid")
-    password: str = Field(..., min_length=8, max_length=72)
+    firebase_uid: str = Field(..., description="Firebase UID — the canonical auth link")
 
 
 class UserUpdate(BaseModel):
@@ -55,8 +55,7 @@ class UserWithProfile(UserResponse):
     """Schema for user with profile data."""
     profile: Optional["ProfileResponse"] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Import at end to avoid circular imports

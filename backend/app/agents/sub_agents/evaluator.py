@@ -52,6 +52,8 @@ class EvaluatorAgent(BaseAgentExecutor):
             "evaluator",
             platform=project_ctx.get("platform", "YouTube"),
             stage_name=stage,
+            niche=project_ctx.get("niche", "general"),
+            target_audience=project_ctx.get("target_audience", "general"),
         )
         
         user_prompt = load_user_prompt(
@@ -73,7 +75,7 @@ class EvaluatorAgent(BaseAgentExecutor):
                 messages, 
                 task_type="scoring", 
                 temperature=0.1,
-                model_override="llama-3-1-8b"
+                model_override="llama-3-3-70b"
             )
             result = parse_llm_json(response.content, fallback={"score": 0.5, "reasoning": "Parse failed"})
         except Exception as e:

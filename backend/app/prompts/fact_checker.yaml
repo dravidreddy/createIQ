@@ -16,9 +16,9 @@ versions:
 
       ## Output Format
       STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE.
-      You must begin with "internal_monologue" to document your research thought process.
+      Include only a concise "verification_summary" field.
       {
-        "internal_monologue": "Reviewing claim against provided reference data...",
+        "verification_summary": "Concise summary of the verification pass...",
         "verified_claims": [
           {"claim": "...", "status": "verified", "source": "...", "confidence": "high|medium"}
         ],

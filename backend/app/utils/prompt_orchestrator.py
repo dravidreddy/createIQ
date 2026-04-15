@@ -111,7 +111,8 @@ class PromptOrchestrator:
         # Layer 5: Memory Layer (top-K retrieval from Qdrant)
         memory_layer = await self._get_memory_layer(
             memory_context, user_id, thread_id,
-            project_context.get("topic", "")
+            project_context.get("topic", ""),
+            project_context.get("project_id"),
         )
         if memory_layer:
             layers_used.append("memory")
@@ -288,6 +289,7 @@ class PromptOrchestrator:
         user_id: Optional[str],
         thread_id: Optional[str],
         topic: str,
+        project_id: Optional[str] = None,
     ) -> str:
         """Layer 5: Memory context from Qdrant vector search.
 
@@ -307,6 +309,7 @@ class PromptOrchestrator:
                 query=topic,
                 user_id=user_id,
                 thread_id=thread_id or "",
+                project_id=project_id,
                 top_k=3,
             )
 
@@ -317,7 +320,7 @@ class PromptOrchestrator:
             for i, result in enumerate(results[:3], 1):
                 content = result.get("content", "")[:500]
                 content_type = result.get("content_type", "output")
-                similarity = result.get("score", 0)
+                similarity = result.get("final_score", result.get("similarity_score", 0))
                 memory_parts.append(
                     f"\n### Past {content_type.title()} (relevance: {similarity:.2f})\n{content}"
                 )

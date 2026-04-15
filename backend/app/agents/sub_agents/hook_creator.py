@@ -12,6 +12,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import HookCreationOutput
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ class HookCreatorAgent(BaseAgentExecutor):
         selected_idea = input_data.get("selected_idea", {})
         user_preferences = input_data.get("user_preferences", {})
         framework = input_data.get("framework", "")
+        project_context = dict(self.user_context or {})
+        style_overrides = project_context.get("style_overrides") or {}
 
         self.log("info", f"Creating hooks for: {selected_idea.get('title', 'unknown')} (framework: {framework or 'all'})")
 
@@ -48,6 +51,10 @@ class HookCreatorAgent(BaseAgentExecutor):
             unique_angle=selected_idea.get("unique_angle", ""),
             target_emotion=selected_idea.get("target_emotion", "curiosity"),
             framework=framework,
+            hook_framework=framework or project_context.get("hook_framework") or style_overrides.get("hook_framework"),
+            vocabulary=project_context.get("vocabulary") or style_overrides.get("vocabulary"),
+            avoid_words=project_context.get("avoid_words") or style_overrides.get("avoid_words"),
+            user_preferences=user_preferences,
         )
 
         messages = [
@@ -55,7 +62,12 @@ class HookCreatorAgent(BaseAgentExecutor):
             LLMMessage(role="user", content=user_prompt),
         ]
 
-        response = await self.llm_generate(messages, task_type="quality")
+        response = await self.llm_generate(
+            messages,
+            task_type="quality",
+            json_mode=True,
+            response_schema=HookCreationOutput,
+        )
         result = parse_llm_json(response.content, fallback={"hooks": []})
 
         hooks = result.get("hooks", [])

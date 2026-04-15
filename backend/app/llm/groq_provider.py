@@ -113,7 +113,8 @@ class GroqProvider(BaseLLMProvider):
                                 "json_mode", "tools", "execution_trace", "trace_id", 
                                 "current_budget_cents", "project_budget_limit", 
                                 "priority", "task_type", "project_id", "skip_cache",
-                                "user_id", "request_id", "test_control", "scenario"
+                                "user_id", "request_id", "test_control", "scenario",
+                                "response_schema", "model_override"
                             ]}
                         ),
                         timeout=30.0
@@ -182,7 +183,8 @@ class GroqProvider(BaseLLMProvider):
                             "json_mode", "tools", "execution_trace", "trace_id",
                             "current_budget_cents", "project_budget_limit",
                             "priority", "task_type", "project_id", "skip_cache",
-                            "user_id", "request_id", "test_control", "scenario"
+                            "user_id", "request_id", "test_control", "scenario",
+                            "response_schema", "model_override"
                         ]}
                     )
                 

@@ -8,11 +8,11 @@ versions:
       1. THUMBNAIL-FIRST (Visual stops the scroll). 2. High Stakes (Money/Status/Fear). 3. Contrarian Hook.
       
       STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE. NO EXPLANATIONS.
-      You must first think step-by-step in the "internal_monologue" field before generating the "ideas" array.
+      Include only a brief "selection_rationale" field summarizing why these ideas fit the audience.
       
       Output Schema:
       {
-        "internal_monologue": "Think step-by-step about what hooks the audience and why these ideas will go viral...",
+        "selection_rationale": "Brief summary of why these ideas fit the audience and platform...",
         "ideas": [
           {
             "title": "...", 

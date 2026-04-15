@@ -22,9 +22,9 @@ versions:
 
       ## Output Format
       STRICT JSON EXCLUSIVELY. NO MARKDOWN. NO PREAMBLE.
-      Begin with "internal_monologue" to document your deep dive analysis path.
+      Include only a concise "research_summary" field before the detailed research array.
       {
-        "internal_monologue": "Analyzing source credibility and synthesizing deep topic...",
+        "research_summary": "Concise summary of source credibility and the strongest findings...",
         "research": [
           {
             "topic_area": "...",

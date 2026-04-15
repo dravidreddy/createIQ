@@ -249,24 +249,7 @@ export interface PipelineStatusResponse {
     tokens_per_second?: number;
 }
 
-// Auth types
-export interface LoginRequest {
-    email: string
-    password: string
-}
-
-export interface SignupRequest {
-    email: string
-    password: string
-    display_name: string
-}
-
-export interface Token {
-    access_token: string
-    refresh_token: string
-    token_type: string
-    expires_in: number
-}
+// Auth types (Managed by Firebase client SDK)
 
 // Profile setup types
 export type ContentNiche =

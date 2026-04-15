@@ -206,7 +206,7 @@ class LLMRouter:
         """Select the best healthy model with dev-mode and cost-efficiency logic."""
         
         # 1. Dev Mode Prioritization
-        if settings.env == "dev" and settings.prioritize_groq:
+        if settings.is_dev and settings.prioritize_groq:
             for name, provider in self._providers.items():
                 config = self.registry.get("models", {}).get(name, {})
                 if config.get("provider") == "groq" and not await self.is_circuit_open(name):
@@ -269,7 +269,7 @@ class LLMRouter:
         
         # ─── Test Control (Phase 1) ──────────────────────────────────
         test_control = kwargs.get("test_control")
-        if test_control and (settings.debug or settings.env == "development"):
+        if test_control and settings.allow_test_controls:
             if test_control == "fail_llm":
                 logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting LLM failure for trace {trace_id}")
                 raise Exception("Injected LLM failure for testing")
@@ -305,7 +305,7 @@ class LLMRouter:
         
         # ─── Test Control (Phase 1) ──────────────────────────────────
         test_control = kwargs.get("test_control")
-        if test_control and (settings.debug or settings.env == "development"):
+        if test_control and settings.allow_test_controls:
             if test_control == "fail_llm":
                 logger.warning(f"LLMRouter: [TEST_CONTROL] Injecting LLM failure for trace {trace_id}")
                 raise Exception("Injected LLM failure for streaming test")

@@ -42,7 +42,7 @@ class FailureSimulator:
     async def simulate_from_request(request: Request):
         from app.config import get_settings
         settings = get_settings()
-        if not settings.debug and settings.env != "development":
+        if not settings.allow_test_controls:
             return
             
         # 1. Latency Simulation

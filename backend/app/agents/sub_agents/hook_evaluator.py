@@ -12,6 +12,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import HookEvaluationOutput
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class HookEvaluatorAgent(BaseAgentExecutor):
 
     async def execute_core(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         hooks = input_data.get("hooks", [])
+        selected_idea = input_data.get("selected_idea", {})
 
         if not hooks:
             return {"evaluated_hooks": []}
@@ -42,7 +44,11 @@ class HookEvaluatorAgent(BaseAgentExecutor):
         system_prompt = await self.get_orchestrated_prompt(
             "hook_evaluator", {}, {}
         )
-        user_prompt = load_user_prompt("hook_evaluator", hooks=hooks)
+        user_prompt = load_user_prompt(
+            "hook_evaluator",
+            hooks=hooks,
+            idea_title=selected_idea.get("title", self.user_context.get("topic", "")),
+        )
 
         messages = [
             LLMMessage(role="system", content=system_prompt),
@@ -50,7 +56,12 @@ class HookEvaluatorAgent(BaseAgentExecutor):
         ]
 
         response = await self.llm_generate(
-            messages, task_type="scoring", temperature=0.2, max_tokens=2048
+            messages,
+            task_type="scoring",
+            temperature=0.2,
+            max_tokens=2048,
+            json_mode=True,
+            response_schema=HookEvaluationOutput,
         )
         result = parse_llm_json(response.content, fallback={"evaluated_hooks": hooks})
 

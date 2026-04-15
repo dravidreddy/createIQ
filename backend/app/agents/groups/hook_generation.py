@@ -11,6 +11,7 @@ from app.agents.sub_agents.hook_creator import HookCreatorAgent
 from app.agents.sub_agents.hook_evaluator import HookEvaluatorAgent
 from app.memory.service import MemoryService
 from app.llm.base import ErrorCode
+from app.agents.context import build_agent_context
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ from typing import Any, Dict, List
 async def hook_creation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Hook Creation (with Parallel Execution)."""
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     selected_idea = state.get("selected_idea") or {}
     
@@ -35,7 +37,7 @@ async def hook_creation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     frameworks = ["curiosity_gap", "contrarian", "story_loop"]
     
     async def generate_variation(framework: str):
-        creator = HookCreatorAgent(user_context=project_ctx)
+        creator = HookCreatorAgent(user_context=agent_ctx)
         res = await creator.execute({
             "selected_idea": selected_idea,
             "user_preferences": user_prefs,
@@ -46,8 +48,7 @@ async def hook_creation_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
     start_parallel = time.perf_counter()
     results = []
-    for f in frameworks:
-        results.append(await generate_variation(f))
+    results = await asyncio.gather(*[generate_variation(f) for f in frameworks])
     latency_parallel = (time.perf_counter() - start_parallel) * 1000
 
     all_hooks = []
@@ -88,11 +89,13 @@ async def hook_evaluation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Hook Evaluation."""
     memory = MemoryService()
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     raw_hooks = state.get("raw_hooks") or []
     
-    evaluator = HookEvaluatorAgent(user_context=project_ctx)
+    evaluator = HookEvaluatorAgent(user_context=agent_ctx)
     evaluated = await evaluator.execute({
         "hooks": raw_hooks,
+        "selected_idea": state.get("selected_idea") or {},
     })
     
     evaluated_hooks = evaluated.get("evaluated_hooks", [])
@@ -102,7 +105,8 @@ async def hook_evaluation_node(state: Dict[str, Any]) -> Dict[str, Any]:
             state.get("project_id", ""),
             state.get("thread_id", ""),
             "hooks",
-            evaluated_hooks
+            evaluated_hooks,
+            user_id=state.get("user_id", ""),
         )
     except Exception as e:
         logger.warning("hook_evaluation_node: failed to save artifacts — %s", e)

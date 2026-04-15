@@ -91,7 +91,8 @@ class AnthropicProvider(BaseLLMProvider):
         # Filter kwargs to only pass recognized parameters to the SDK
         allowed_kwargs = {k: v for k, v in kwargs.items() if k not in [
             "json_mode", "execution_trace", "trace_id", "current_budget_cents", 
-            "project_budget_limit", "priority", "task_type", "project_id"
+            "project_budget_limit", "priority", "task_type", "project_id",
+            "response_schema", "model_override"
         ]}
 
         try:

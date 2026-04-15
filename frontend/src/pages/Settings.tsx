@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { userApi, authApi } from '../services/api'
+import { userApi } from '../services/api'
 import { Profile } from '../types'
 import { User, Save, Loader2, Sparkles, Shield, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { auth } from '../lib/firebase'
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth'
 
 const NICHES = ['Tech', 'Fitness', 'Finance', 'Education', 'Entertainment', 'Gaming', 'Lifestyle', 'Travel', 'Food', 'Beauty', 'Other']
 const STYLES = ['Educational', 'Entertaining', 'Inspirational', 'Casual', 'Professional', 'Storytelling', 'Tutorial']
@@ -24,6 +26,7 @@ export default function Settings() {
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [isChangingPassword, setIsChangingPassword] = useState(false)
+    const isGoogleUser = auth.currentUser?.providerData?.[0]?.providerId === 'google.com'
 
     useEffect(() => {
         if (user) {
@@ -114,13 +117,28 @@ export default function Settings() {
         }
         setIsChangingPassword(true)
         try {
-            await authApi.changePassword(currentPassword, newPassword)
-            toast.success('Password updated successfully')
+            const firebaseUser = auth.currentUser
+            if (!firebaseUser || !firebaseUser.email) {
+                toast.error('No active session. Please sign in again.')
+                return
+            }
+            // Re-authenticate with current password before changing
+            const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword)
+            await reauthenticateWithCredential(firebaseUser, credential)
+            // Update password via Firebase
+            await updatePassword(firebaseUser, newPassword)
+            toast.success('Password updated successfully via Firebase')
             setCurrentPassword('')
             setNewPassword('')
             setConfirmPassword('')
         } catch (error: any) {
-            toast.error(error.message || 'Failed to update password')
+            if (error.code === 'auth/wrong-password') {
+                toast.error('Current password is incorrect')
+            } else if (error.code === 'auth/weak-password') {
+                toast.error('New password is too weak')
+            } else {
+                toast.error(error.message || 'Failed to update password')
+            }
         } finally {
             setIsChangingPassword(false)
         }
@@ -383,8 +401,26 @@ export default function Settings() {
                                 </div>
                             </div>
                             <div className="card-minimal space-y-6">
+                                {isGoogleUser ? (
+                                    <div className="text-center py-8 space-y-3">
+                                        <Shield className="w-10 h-10 text-accent/30 mx-auto" />
+                                        <h4 className="text-sm font-semibold text-text-primary">Managed by Google</h4>
+                                        <p className="text-xs text-text-secondary max-w-sm mx-auto">
+                                            Your account uses Google Sign-In. Password management is handled through your Google Account settings.
+                                        </p>
+                                        <a
+                                            href="https://myaccount.google.com/security"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-block text-xs text-accent hover:text-accent/80 underline mt-2"
+                                        >
+                                            Manage Google Account Security →
+                                        </a>
+                                    </div>
+                                ) : (
                                 <form onSubmit={handleChangePassword} className="space-y-4">
                                     <h4 className="text-sm font-semibold text-text-primary">Change Password</h4>
+                                    <p className="text-xs text-text-secondary">Password is managed by Firebase Authentication.</p>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <label className="text-xs text-text-secondary font-mono">Current Password</label>
@@ -435,6 +471,7 @@ export default function Settings() {
                                         </button>
                                     </div>
                                 </form>
+                                )}
                             </div>
                         </section>
                     )}

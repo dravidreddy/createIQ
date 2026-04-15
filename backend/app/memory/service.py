@@ -73,6 +73,7 @@ class MemoryService:
         thread_id: str,
         artifact_type: str,
         content: Any,
+        user_id: str = "",
     ) -> None:
         """Save a pipeline artifact (idea, hook, script, etc.)."""
         await self.project_memory.save_artifact(project_id, artifact_type, content)
@@ -82,7 +83,7 @@ class MemoryService:
             content_str = str(content)[:3000] if not isinstance(content, str) else content[:3000]
             await self.vector_store.upsert(
                 content=content_str,
-                user_id="pipeline",
+                user_id=user_id or "pipeline",
                 thread_id=thread_id,
                 project_id=project_id,
                 content_type=artifact_type,

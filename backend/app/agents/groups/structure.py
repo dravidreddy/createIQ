@@ -10,13 +10,14 @@ from typing import Any, Dict
 from app.agents.sub_agents.structure_analyzer import StructureAnalyzerAgent
 from app.agents.sub_agents.pacing_optimizer import PacingOptimizerAgent
 from app.llm.base import ErrorCode
+from app.agents.context import build_agent_context
 
 logger = logging.getLogger(__name__)
 
 
 async def structure_analysis_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Structure Analysis."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     project_ctx = state.get("project_context") or {}
     script = state.get("script") or {}
 
@@ -51,7 +52,7 @@ async def structure_analysis_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 async def pacing_optimization_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Pacing Optimization."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     script = state.get("script") or {}
     analysis = state.get("structure_analysis") or {}

@@ -12,6 +12,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import GrowthAdviceOutput
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ class GrowthAdvisorAgent(BaseAgentExecutor):
     async def execute_core(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         series_plan = input_data.get("series_plan", [])
         user_preferences = input_data.get("user_preferences", {})
+        project_context = dict(self.user_context or {})
+        style_overrides = project_context.get("style_overrides") or {}
 
         self.log("info", "Generating growth strategy")
 
@@ -44,6 +47,10 @@ class GrowthAdvisorAgent(BaseAgentExecutor):
             "growth_advisor",
             series_plan=series_plan,
             user_preferences=user_preferences,
+            platforms=project_context.get("platforms", ["YouTube"]),
+            niche=project_context.get("niche", "general"),
+            vocabulary=project_context.get("vocabulary") or style_overrides.get("vocabulary"),
+            avoid_words=project_context.get("avoid_words") or style_overrides.get("avoid_words"),
         )
 
         messages = [
@@ -52,7 +59,11 @@ class GrowthAdvisorAgent(BaseAgentExecutor):
         ]
 
         response = await self.llm_generate(
-            messages, task_type="quality", temperature=0.6
+            messages,
+            task_type="quality",
+            temperature=0.6,
+            json_mode=True,
+            response_schema=GrowthAdviceOutput,
         )
         result = parse_llm_json(response.content, fallback={
             "posting_schedule": {},

@@ -32,6 +32,30 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+_GENERIC_CONTEXT_VALUES = {
+    "",
+    "general",
+    "general audience",
+    "medium (1-10 min)",
+    "english",
+    "youtube",
+    "other",
+    "mixed",
+}
+
+
+def _is_generic_context_value(value: Any) -> bool:
+    """Return True when a request default should yield to saved profile context."""
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() in _GENERIC_CONTEXT_VALUES
+    if isinstance(value, list):
+        lowered = [str(v).strip().lower() for v in value if v]
+        return not lowered or lowered == ["youtube"]
+    return False
+
+
 
 # ── Utility nodes and Guards ─────────────────────────────────────
 
@@ -92,11 +116,40 @@ async def load_memory_node(state: PipelineState) -> PipelineState:
     user_profile_ctx = await user_service.get_profile_context(state.get("user_id", ""))
     if user_profile_ctx:
         profile_dict = user_profile_ctx.model_dump()
-        # Do not overwrite explicit project context fields like topic/niche if they exist,
-        # but do inject missing persona fields
-        for k, v in profile_dict.items():
-            if v and not project_ctx.get(k):
-                project_ctx[k] = v
+        profile_field_map = {
+            "content_niche": "niche",
+            "platforms": "platforms",
+            "video_length": "video_length",
+            "language": "language",
+        }
+        for key, value in profile_dict.items():
+            if not value:
+                continue
+            target_key = profile_field_map.get(key, key)
+            existing = project_ctx.get(target_key)
+            if _is_generic_context_value(existing):
+                project_ctx[target_key] = value
+
+        if profile_dict.get("platforms") and _is_generic_context_value(project_ctx.get("platform")):
+            project_ctx["platform"] = profile_dict["platforms"][0]
+
+        style_overrides = dict(project_ctx.get("style_overrides") or {})
+        for style_key in (
+            "content_style",
+            "additional_context",
+            "vocabulary",
+            "avoid_words",
+            "formality_level",
+            "hook_framework",
+            "default_cta",
+            "pacing_style",
+        ):
+            value = profile_dict.get(style_key)
+            if value and not style_overrides.get(style_key):
+                style_overrides[style_key] = value
+            if value and _is_generic_context_value(project_ctx.get(style_key)):
+                project_ctx[style_key] = value
+        project_ctx["style_overrides"] = style_overrides
 
     # NAPOS: Resolve niche via inference if not explicitly set
     from app.utils.niche_inference import infer_niche
@@ -262,6 +315,7 @@ async def save_results_node(state: PipelineState) -> PipelineState:
                     "strategy_plan": state.get("strategy_plan"),
                     "total_cost_cents": state.get("total_cost_cents", 0),
                 },
+                user_id=state.get("user_id", ""),
             )
     except Exception as e:
         logger.warning("save_results: failed — %s", e)

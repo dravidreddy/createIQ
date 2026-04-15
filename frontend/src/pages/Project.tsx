@@ -86,10 +86,19 @@ export default function Project() {
 
     const handleStart = async () => {
         if (!id) return;
+        const platformLabels: Record<Platform, string> = {
+            youtube: 'YouTube',
+            instagram: 'Instagram Reels',
+            twitter: 'Twitter/X',
+            linkedin: 'LinkedIn',
+            tiktok: 'TikTok',
+        };
+        const selectedPlatform = platformLabels[platform];
         try {
             await startPipeline(id, currentProject.topic || "", { 
-                platforms: [platform],
-                platform: platform,
+                niche: currentProject.niche || 'general',
+                platforms: [selectedPlatform],
+                platform: selectedPlatform,
                 execution_mode: mode
             });
             toast.success('Pipeline engaged');

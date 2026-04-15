@@ -12,6 +12,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import IdeaGenerationOutput
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,13 @@ class IdeaGeneratorAgent(BaseAgentExecutor):
             LLMMessage(role="user", content=user_prompt),
         ]
 
-        response = await self.llm_generate(messages, task_type="quality", max_tokens=4096)
+        response = await self.llm_generate(
+            messages,
+            task_type="quality",
+            max_tokens=4096,
+            json_mode=True,
+            response_schema=IdeaGenerationOutput,
+        )
         
         logger.debug("IdeaGenerator raw response from %s (%d chars)", response.model, len(response.content))
         

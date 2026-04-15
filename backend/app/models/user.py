@@ -1,9 +1,8 @@
 """
 User Document — MongoDB / Beanie
 
-Core user identity. Profile is stored in a separate `user_profiles` collection.
-The legacy embedded `profile` field is kept as Optional for backward compatibility
-but new code should use the `user_profiles` collection instead.
+Core user identity linked to Firebase via firebase_uid.
+Profile is stored in a separate `user_profiles` collection.
 """
 
 from datetime import datetime
@@ -18,9 +17,9 @@ class User(Document):
 
     email: Indexed(EmailStr, unique=True)  # type: ignore[valid-type]
     display_name: str
-    hashed_password: Optional[str] = None
-    
-    auth_provider: str = "local"
+
+    # Firebase is the sole auth provider — this is the canonical link
+    # Made Optional temporarily for migration compatibility.
     firebase_uid: Optional[str] = None
 
     is_active: bool = True
@@ -38,3 +37,11 @@ class User(Document):
     class Settings:
         name = "users"
         use_state_management = True
+        indexes = [
+            # Use a sparse index so multiple users missing the field don't cause duplicate key errors
+            __import__('pymongo').IndexModel(
+                [("firebase_uid", __import__('pymongo').ASCENDING)], 
+                unique=True, 
+                sparse=True
+            )
+        ]

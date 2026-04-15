@@ -271,6 +271,16 @@ class BaseAgentExecutor(BaseAgent):
         try:
             from app.utils.prompt_orchestrator import get_prompt_orchestrator
             orchestrator = get_prompt_orchestrator()
+            project_context = {**self.user_context, **(project_context or {})}
+            style_overrides = project_context.get("style_overrides") or {}
+            if isinstance(style_overrides, dict):
+                for key, value in style_overrides.items():
+                    if value and not project_context.get(key):
+                        project_context[key] = value
+            if user_preferences is None:
+                user_preferences = self.user_context.get("user_preferences", {})
+            user_id = user_id or self.user_context.get("user_id")
+            thread_id = thread_id or self.user_context.get("thread_id")
             niche = project_context.get("niche", project_context.get("content_niche", "general"))
 
             prompt = await orchestrator.build_system_prompt(

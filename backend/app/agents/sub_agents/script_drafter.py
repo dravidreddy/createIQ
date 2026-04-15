@@ -13,6 +13,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import ScriptDraftOutput
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,8 @@ class ScriptDrafterAgent(BaseAgentExecutor):
         selected_hook = input_data.get("selected_hook", {})
         research = input_data.get("research", [])
         user_preferences = input_data.get("user_preferences", {})
-        project_context = input_data.get("project_context", {})
+        project_context = {**self.user_context, **(input_data.get("project_context", {}) or {})}
+        style_overrides = project_context.get("style_overrides") or {}
 
         topic = selected_idea.get("title", "")
         self.log("info", f"Drafting script for: {topic}")
@@ -52,8 +54,9 @@ class ScriptDrafterAgent(BaseAgentExecutor):
         elif isinstance(research, str):
             research_summary = research[:3000]
 
+        prompt_context = {**project_context, "selected_idea": selected_idea}
         system_prompt = await self.get_orchestrated_prompt(
-            "script_drafter", project_context, user_preferences
+            "script_drafter", prompt_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "script_drafter",
@@ -62,6 +65,13 @@ class ScriptDrafterAgent(BaseAgentExecutor):
             selected_hook=selected_hook,
             research_context=research_summary,
             user_preferences=user_preferences,
+            platforms=project_context.get("platforms", ["YouTube"]),
+            target_audience=project_context.get("target_audience", "general audience"),
+            video_length=project_context.get("video_length", "Medium (1-10 min)"),
+            language=project_context.get("language", "English"),
+            vocabulary=project_context.get("vocabulary") or style_overrides.get("vocabulary"),
+            avoid_words=project_context.get("avoid_words") or style_overrides.get("avoid_words"),
+            pacing_style=project_context.get("pacing_style") or style_overrides.get("pacing_style"),
         )
 
         messages = [
@@ -70,7 +80,12 @@ class ScriptDrafterAgent(BaseAgentExecutor):
         ]
 
         response = await self.llm_generate(
-            messages, task_type="quality", max_tokens=4096, temperature=0.7
+            messages,
+            task_type="quality",
+            max_tokens=4096,
+            temperature=0.7,
+            json_mode=True,
+            response_schema=ScriptDraftOutput,
         )
 
         result = parse_llm_json(response.content, fallback={

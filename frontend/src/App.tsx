@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
 import { useEffect } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { useFirebaseTokenRefresh } from './hooks/useFirebaseTokenRefresh'
 
 // Pages
 import Landing from './pages/Landing'
@@ -47,6 +48,9 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
     const { isDarkMode } = useThemeStore()
+
+    // Hybrid Firebase token refresh (proactive 50-min timer + visibility handler)
+    useFirebaseTokenRefresh()
 
     // Apply dark mode class to document
     useEffect(() => {

@@ -16,6 +16,7 @@ from app.tools.search import get_tavily_tool
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
 from app.utils.context_pruner import ContextPruner
+from app.schemas.llm_outputs import TrendResearchOutput
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,12 @@ class TrendResearcherAgent(BaseAgentExecutor):
         # Prune total message history for Groq's 32k limit
         messages = pruner.prune_messages(messages, max_tokens=28000)
 
-        response = await self.llm_generate(messages, task_type="quality")
+        response = await self.llm_generate(
+            messages,
+            task_type="quality",
+            json_mode=True,
+            response_schema=TrendResearchOutput,
+        )
         
         logger.debug("TrendResearcher raw response from %s (%d chars)", response.model, len(response.content))
         

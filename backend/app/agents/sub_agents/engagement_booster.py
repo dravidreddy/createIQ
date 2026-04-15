@@ -35,15 +35,21 @@ class EngagementBoosterAgent(BaseAgentExecutor):
         edited_script = input_data.get("edited_script", "")
         if isinstance(edited_script, dict):
             edited_script = edited_script.get("full_script", str(edited_script))
+        user_preferences = input_data.get("user_preferences", {})
+        project_context = dict(self.user_context or {})
+        style_overrides = project_context.get("style_overrides") or {}
 
         self.log("info", "Boosting engagement elements")
 
         system_prompt = await self.get_orchestrated_prompt(
-            "engagement_booster", self.user_context, {}
+            "engagement_booster", self.user_context, user_preferences
         )
         user_prompt = load_user_prompt(
             "engagement_booster",
             script=edited_script[:6000],
+            user_preferences=user_preferences,
+            vocabulary=project_context.get("vocabulary") or style_overrides.get("vocabulary"),
+            avoid_words=project_context.get("avoid_words") or style_overrides.get("avoid_words"),
         )
 
         messages = [

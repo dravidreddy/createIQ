@@ -12,13 +12,14 @@ from app.agents.sub_agents.engagement_booster import EngagementBoosterAgent
 from app.agents.sub_agents.final_reviewer import FinalReviewerAgent
 from app.memory.service import MemoryService
 from app.llm.base import ErrorCode
+from app.agents.context import build_agent_context
 
 logger = logging.getLogger(__name__)
 
 
 async def line_editing_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Line Editing."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     script = state.get("script") or {}
     structure_guidance = state.get("structure_guidance") or {}
@@ -55,8 +56,9 @@ async def line_editing_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 async def engagement_boosting_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Engagement Boosting."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     line_edited = state.get("line_edited_script") or ""
+    user_prefs = state.get("user_preferences") or {}
 
     trace = state.get("execution_trace", [])
     trace.append("node_started:engagement_boosting")
@@ -64,6 +66,7 @@ async def engagement_boosting_node(state: Dict[str, Any]) -> Dict[str, Any]:
     booster = EngagementBoosterAgent(user_context=ctx)
     boosted = await booster.execute({
         "edited_script": line_edited,
+        "user_preferences": user_prefs,
         "execution_trace": trace
     })
 
@@ -90,7 +93,7 @@ async def engagement_boosting_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 async def final_review_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Final Review."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     enhanced_script = state.get("enhanced_script") or ""
     memory = MemoryService()
@@ -102,6 +105,8 @@ async def final_review_node(state: Dict[str, Any]) -> Dict[str, Any]:
     reviewed = await reviewer.execute({
         "enhanced_script": enhanced_script,
         "user_preferences": user_prefs,
+        "selected_idea": state.get("selected_idea") or {},
+        "project_context": state.get("project_context") or {},
         "execution_trace": trace
     })
 
@@ -123,7 +128,8 @@ async def final_review_node(state: Dict[str, Any]) -> Dict[str, Any]:
             state.get("project_id", ""),
             state.get("thread_id", ""),
             "final_script",
-            edited_script
+            edited_script,
+            user_id=state.get("user_id", ""),
         )
     except Exception as e:
         logger.warning("final_review_node: failed to save artifacts — %s", e)

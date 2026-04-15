@@ -5,7 +5,7 @@ Pydantic schemas for the structured content templates.
 """
 from datetime import datetime
 from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class ContentTemplateCreate(BaseModel):
     name: str = Field(..., min_length=1)
@@ -25,5 +25,4 @@ class ContentTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

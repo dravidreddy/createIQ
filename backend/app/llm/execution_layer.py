@@ -214,13 +214,22 @@ class ExecutionLayer:
 
         # 3. Output Scoped Caching
         skip_cache = kwargs.get("skip_cache", False) or priority == "HIGH"
+        schema = kwargs.get("response_schema")
+        cache_params = {
+            "model": provider_name,
+            "temperature": kwargs.get("temperature", 0.7),
+            "max_tokens": kwargs.get("max_tokens", 4096),
+            "json_mode": bool(kwargs.get("json_mode")),
+            "schema": getattr(schema, "__name__", None),
+            **(kwargs.get("params") or {}),
+        }
         if not skip_cache:
             cached = await get_cached_llm_response(
                 messages, 
                 task_type=task_type,
                 user_id=user_id,
                 project_id=project_id,
-                params=kwargs.get("params")
+                params=cache_params
             )
             if cached:
                 return LLMResponse(**cached)
@@ -243,7 +252,8 @@ class ExecutionLayer:
                 execution_trace.append(f"skipped_provider_circuit_open:{name}")
                 continue
             
-            timeout = self.per_call_timeout
+            model_config = self.router.registry.get("models", {}).get(name, {})
+            timeout = model_config.get("default_timeout") or self._get_timeout(name)
         
             @retry_with_backoff(max_attempts=self.max_retries, retry_on=(LLMTimeoutError, asyncio.TimeoutError, LLMRateLimitError))
             async def _attempt_provider_call():
@@ -291,6 +301,7 @@ class ExecutionLayer:
                         schema=json_schema,
                         messages=messages,
                         trace_id=trace_id,
+                        selected_provider=name,
                         **kwargs
                     )
 
@@ -305,8 +316,16 @@ class ExecutionLayer:
                 )
 
                 # 7. Store Cache & Idempotency
+                response_cache_params = {**cache_params, "model": name}
                 if not skip_cache:
-                    await cache_llm_response(messages, response.model_dump(), task_type=task_type, user_id=user_id, project_id=project_id)
+                    await cache_llm_response(
+                        messages,
+                        response.model_dump(),
+                        task_type=task_type,
+                        user_id=user_id,
+                        project_id=project_id,
+                        params=response_cache_params,
+                    )
                 await self._save_idempotency(idem_key, response)
 
                 await self.router.record_success(name, getattr(response, "latency_ms", 0.0))

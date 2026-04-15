@@ -13,6 +13,7 @@ from app.llm.base import LLMMessage
 from app.tools.search import get_tavily_tool
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import FactCheckOutput
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +37,15 @@ class FactCheckerAgent(BaseAgentExecutor):
         script = input_data.get("script", input_data.get("full_script", ""))
         if isinstance(script, dict):
             script = script.get("full_script", str(script))
+        project_context = {**self.user_context, **(input_data.get("project_context", {}) or {})}
+        user_preferences = input_data.get("user_preferences", self.user_context.get("user_preferences", {}))
 
         self.log("info", "Fact-checking script")
 
         search_tool = get_tavily_tool()
 
         system_prompt = await self.get_orchestrated_prompt(
-            "fact_checker", {}, {}
+            "fact_checker", project_context, user_preferences
         )
         user_prompt = load_user_prompt("fact_checker", script=script[:12000])
 
@@ -51,7 +54,13 @@ class FactCheckerAgent(BaseAgentExecutor):
             LLMMessage(role="user", content=user_prompt),
         ]
 
-        response = await self.llm_generate(messages, task_type="quality", max_tokens=4096)
+        response = await self.llm_generate(
+            messages,
+            task_type="quality",
+            max_tokens=4096,
+            json_mode=True,
+            response_schema=FactCheckOutput,
+        )
         result = parse_llm_json(response.content, fallback={
             "verified_claims": [],
             "unverified_claims": [],

@@ -12,6 +12,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import IdeaRankingOutput
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,12 @@ class IdeaRankerAgent(BaseAgentExecutor):
 
         # Use fast scoring model for efficiency
         response = await self.llm_generate(
-            messages, task_type="scoring", temperature=0.2, max_tokens=2048
+            messages,
+            task_type="scoring",
+            temperature=0.2,
+            max_tokens=2048,
+            json_mode=True,
+            response_schema=IdeaRankingOutput,
         )
         result = parse_llm_json(response.content, fallback={"ranked_ideas": ideas})
 

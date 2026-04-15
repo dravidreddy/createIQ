@@ -11,6 +11,7 @@ from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
+from app.schemas.llm_outputs import SeriesPlanOutput
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,8 @@ class SeriesPlannerAgent(BaseAgentExecutor):
         if isinstance(final_script, dict):
             final_script = final_script.get("full_script", str(final_script))
         selected_idea = input_data.get("selected_idea", {})
-        project_context = input_data.get("project_context", {})
+        project_context = {**self.user_context, **(input_data.get("project_context", {}) or {})}
+        style_overrides = project_context.get("style_overrides") or {}
 
         self.log("info", "Planning content series")
 
@@ -46,7 +48,12 @@ class SeriesPlannerAgent(BaseAgentExecutor):
             "series_planner",
             final_script=final_script[:3000],
             selected_idea=selected_idea,
+            content_title=selected_idea.get("title", project_context.get("topic", "")),
+            topic=project_context.get("topic", selected_idea.get("title", "")),
             niche=project_context.get("niche", "general"),
+            platforms=project_context.get("platforms", ["YouTube"]),
+            vocabulary=project_context.get("vocabulary") or style_overrides.get("vocabulary"),
+            avoid_words=project_context.get("avoid_words") or style_overrides.get("avoid_words"),
         )
 
         messages = [
@@ -54,7 +61,12 @@ class SeriesPlannerAgent(BaseAgentExecutor):
             LLMMessage(role="user", content=user_prompt),
         ]
 
-        response = await self.llm_generate(messages, task_type="quality")
+        response = await self.llm_generate(
+            messages,
+            task_type="quality",
+            json_mode=True,
+            response_schema=SeriesPlanOutput,
+        )
         result = parse_llm_json(response.content, fallback={"series_plan": []})
 
         plan = result.get("series_plan", [])

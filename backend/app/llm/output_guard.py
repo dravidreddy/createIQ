@@ -48,6 +48,7 @@ class OutputGuard:
 
         # 2. Stage 2: Self Repair (Retry with same model)
         # Limit recursion for self-repair
+        repair_model = kwargs.get("selected_provider") or kwargs.get("model_override") or "llama-3-3-70b"
         for attempt in range(self.max_retries):
             try:
                 repair_messages = messages + [
@@ -63,7 +64,7 @@ class OutputGuard:
                     messages=repair_messages,
                     task_type="repair",
                     priority="HIGH",
-                    model_override=response.model,
+                    model_override=repair_model,
                     trace_id=trace_id
                 )
                 

@@ -12,6 +12,7 @@ from app.agents.sub_agents.script_drafter import ScriptDrafterAgent
 from app.agents.sub_agents.fact_checker import FactCheckerAgent
 from app.memory.service import MemoryService
 from app.llm.base import ErrorCode
+from app.agents.context import build_agent_context
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ async def deep_research_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Deep Research for script."""
     memory = MemoryService()
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     selected_idea = state.get("selected_idea") or {}
     selected_hook = state.get("selected_hook") or {}
 
@@ -43,11 +45,13 @@ async def deep_research_node(state: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as shadow_e:
         logger.debug(f"ShadowExecution Check failed: {shadow_e}")
 
-    researcher = DeepResearcherAgent(user_context=project_ctx)
+    researcher = DeepResearcherAgent(user_context=agent_ctx)
     research = await researcher.execute({
         "selected_idea": selected_idea,
         "selected_hook": selected_hook,
-        "execution_trace": trace
+        "execution_trace": trace,
+        "project_context": project_ctx,
+        "user_preferences": state.get("user_preferences") or {},
     })
 
     results = research.get("research", [])
@@ -80,12 +84,13 @@ async def script_drafting_node(state: Dict[str, Any]) -> Dict[str, Any]:
         return {"current_stage": "script_drafting", "execution_trace": trace}
 
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     selected_idea = state.get("selected_idea") or {}
     selected_hook = state.get("selected_hook") or {}
     research = state.get("script_research_results") or []
 
-    drafter = ScriptDrafterAgent(user_context=project_ctx)
+    drafter = ScriptDrafterAgent(user_context=agent_ctx)
     script = await drafter.execute({
         "selected_idea": selected_idea,
         "selected_hook": selected_hook,
@@ -121,12 +126,15 @@ async def script_drafting_node(state: Dict[str, Any]) -> Dict[str, Any]:
 async def fact_checking_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Fact Checking."""
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     script = state.get("raw_script") or state.get("script") or {}
     memory = MemoryService()
 
-    checker = FactCheckerAgent(user_context=project_ctx)
+    checker = FactCheckerAgent(user_context=agent_ctx)
     checked = await checker.execute({
         "script": script,
+        "project_context": project_ctx,
+        "user_preferences": state.get("user_preferences") or {},
     })
 
     # Merge fact-checked script
@@ -140,7 +148,8 @@ async def fact_checking_node(state: Dict[str, Any]) -> Dict[str, Any]:
             state.get("project_id", ""),
             state.get("thread_id", ""),
             "script",
-            script
+            script,
+            user_id=state.get("user_id", ""),
         )
     except Exception as e:
         logger.warning("fact_checking_node: failed to save artifacts — %s", e)

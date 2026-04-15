@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { User, Profile, Project, ProfileCreate } from '../types'
+import { auth } from '../lib/firebase'
 
 export const getBaseUrl = () => {
     let url = (import.meta as any).env?.VITE_API_URL;
@@ -50,25 +51,36 @@ api.interceptors.response.use(
 
         const originalRequest = error.config
 
-        if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && originalRequest.url !== '/auth/refresh') {
+        // 2. Reactive Firebase token refresh on 401
+        if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true
 
             // If a refresh is already in flight, wait for it instead of starting a new one
             if (!refreshPromise) {
-                refreshPromise = axios.post(`${API_URL}/auth/refresh`, {}, { 
-                    withCredentials: true,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                }).finally(() => {
+                refreshPromise = (async () => {
+                    const firebaseUser = auth.currentUser;
+                    if (!firebaseUser) {
+                        throw new Error('No Firebase session');
+                    }
+                    // Force-refresh the Firebase ID token
+                    const newToken = await firebaseUser.getIdToken(true);
+                    // Update the backend cookie with the fresh token
+                    await axios.post(`${API_URL}/auth/firebase`, { token: newToken }, {
+                        withCredentials: true,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    return newToken;
+                })().finally(() => {
                     refreshPromise = null;
                 });
             }
 
             try {
                 await refreshPromise;
-                // Retry original request automatically with new cookies
+                // Retry original request — cookie is now updated
                 return api(originalRequest);
             } catch (refreshError) {
-                // Refresh failed, prevent infinite loops by clearing persist store
+                // Refresh failed — clear local state and redirect
                 localStorage.removeItem('auth-storage')
                 
                 // Only redirect if not already on login/signup pages to avoid refresh loops
@@ -83,30 +95,16 @@ api.interceptors.response.use(
     }
 )
 
-// Auth API
+// Auth API — Firebase-native
 export const authApi = {
-    login: async (email: string, password: string): Promise<User> => {
-        const response = await api.post('/auth/login', { email, password })
-        return response.data
-    },
-
-    signup: async (email: string, password: string, display_name: string): Promise<User> => {
-        const response = await api.post('/auth/signup', { email, password, display_name })
+    firebaseAuth: async (token: string): Promise<User> => {
+        const response = await api.post('/auth/firebase', { token })
         return response.data
     },
 
     getMe: async (): Promise<User> => {
         const response = await api.get('/auth/me')
         return response.data
-    },
-
-    firebaseAuth: async (token: string): Promise<User> => {
-        const response = await api.post('/auth/firebase', { token })
-        return response.data
-    },
-
-    changePassword: async (current_password: string, new_password: string): Promise<void> => {
-        await api.post('/auth/change-password', { current_password, new_password })
     },
 
     logout: async (): Promise<void> => {

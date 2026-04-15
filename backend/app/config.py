@@ -9,14 +9,36 @@ V4 redesign: Removed Redis/ARQ/FAISS, added Qdrant + preference learning.
 
 from functools import lru_cache
 from typing import List, Optional
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
 import json
 import os
 
 
+_TRUTHY_VALUES = {"1", "true", "t", "yes", "y", "on", "debug", "dev", "development", "local"}
+_FALSY_VALUES = {"0", "false", "f", "no", "n", "off", "prod", "production", "release", "live"}
+_ENV_ALIASES = {
+    "dev": "dev",
+    "development": "dev",
+    "local": "dev",
+    "test": "test",
+    "testing": "test",
+    "prod": "prod",
+    "production": "prod",
+    "release": "prod",
+    "live": "prod",
+}
+
+
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(
+        env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
 
     # ─── Application ─────────────────────────────────────────────
     app_name: str = "CreateIQ"
@@ -25,6 +47,25 @@ class Settings(BaseSettings):
 
     # ─── CORS ────────────────────────────────────────────────────
     cors_origins: str = '["http://localhost:5173","http://localhost:3000","http://localhost","http://127.0.0.1:5173","http://127.0.0.1:3000","http://127.0.0.1"]'
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def normalize_debug(cls, value):
+        """Accept bool-like values plus legacy mode strings from shell environments."""
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return False
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in _TRUTHY_VALUES:
+                return True
+            if normalized in _FALSY_VALUES:
+                return False
+        raise ValueError(
+            "DEBUG must be a boolean-like value such as true/false, 1/0, yes/no, "
+            "or a runtime mode hint like dev/development or prod/release."
+        )
 
     @property
     def cors_origins_list(self) -> List[str]:
@@ -36,7 +77,7 @@ class Settings(BaseSettings):
             origins = [o.strip() for o in self.cors_origins.split(",") if o.strip()] if self.cors_origins else []
         # Strip trailing slashes — CORS matching is strict
         origins = [o.rstrip("/") for o in origins]
-        if self.env.lower() == "prod":
+        if self.is_prod:
             # Filter out localhost and 127.0.0.1 for production
             origins = [o for o in origins if "localhost" not in o and "127.0.0.1" not in o]
         return origins
@@ -54,11 +95,19 @@ class Settings(BaseSettings):
 
     @property
     def mongodb_db_name(self) -> str:
-        """Dynamically determine database name based on environment."""
-        suffix = self.env.lower()
-        if suffix not in ["dev", "test", "prod"]:
-            suffix = "dev"
-        return f"creatoriq_{suffix}"
+        """Dynamically determine database name based on environment.
+        
+        Can be overridden explicitly via MONGODB_DB_NAME env var.
+        This allows setting ENV=PROD for cookie/security settings
+        without being forced to use a different database.
+        """
+        # Explicit override takes priority — use this when your data is in a
+        # specific db regardless of what ENV is set to.
+        override = os.environ.get("MONGODB_DB_NAME")
+        if override:
+            return override
+        
+        return f"creatoriq_{self.runtime_env}"
 
     # ─── Cache & Real-time — Redis ───────────────────────────────
     redis_url: str = Field(
@@ -67,11 +116,8 @@ class Settings(BaseSettings):
         alias="REDIS_URL",
     )
 
-    # ─── JWT Authentication ──────────────────────────────────────
-    secret_key: str = Field(default="dev_secret_key_change_me", description="JWT secret key")
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 120
-    refresh_token_expire_days: int = 7
+    # ─── Firebase Authentication ─────────────────────────────────
+    # Firebase owns all credential verification. No backend JWTs.
     firebase_credentials_path: Optional[str] = Field(default=None, description="Path to Firebase Service Account JSON")
 
     # ─── Cookie security ─────────────────────────────────────────
@@ -169,7 +215,6 @@ class Settings(BaseSettings):
     alpha_sse_history_max: int = Field(default=100, description="Max events stored for SSE replay")
     alpha_sse_history_ttl: int = Field(default=1800, description="TTL for SSE history (30 mins)")
 
-
     # ─── V3.3 Cost Table (cents per 1K tokens) ──────────────────
     # Low-cost / Routing (GPT-4o-mini, Gemini Flash, DeepSeek)
     cost_per_1k_input_routing: float = Field(default=0.01, description="Cost/1K input — GPT-4o-mini")
@@ -192,7 +237,41 @@ class Settings(BaseSettings):
     # ─── Production Hardening ──────────────────────────
     env: str = Field(default="dev", description="Application environment (dev/prod)")
     test_mode: bool = Field(default=False, description="Enable deterministic test mode (Mocks + Fixed IDs)", alias="TEST_MODE")
-    
+
+    @field_validator("env", mode="before")
+    @classmethod
+    def normalize_env(cls, value):
+        """Normalize environment aliases so runtime checks stay consistent."""
+        if value is None:
+            return "dev"
+        if not isinstance(value, str):
+            raise ValueError("ENV must be a string like dev, test, or prod.")
+        normalized = value.strip().lower()
+        mapped = _ENV_ALIASES.get(normalized)
+        if mapped:
+            return mapped
+        raise ValueError("ENV must be one of: dev, test, prod, development, testing, production, release, live.")
+
+    @property
+    def runtime_env(self) -> str:
+        return self.env
+
+    @property
+    def is_dev(self) -> bool:
+        return self.runtime_env == "dev"
+
+    @property
+    def is_test(self) -> bool:
+        return self.runtime_env == "test"
+
+    @property
+    def is_prod(self) -> bool:
+        return self.runtime_env == "prod"
+
+    @property
+    def allow_test_controls(self) -> bool:
+        return self.debug or self.is_dev or self.is_test
+
     def validate_config(self):
         """Raise error if critical keys are missing or misconfigured in any environment."""
         critical_keys = {
@@ -211,13 +290,12 @@ class Settings(BaseSettings):
         # 2. Localhost Fallback Prevention
         # In PROD: Strictly NO localhost.
         # In DEV: Warn if localhost is used but not explicitly intended.
-        is_prod = self.env.lower() == "prod"
         for key, val in [("MONGO_URI", self.mongo_uri), ("REDIS_URL", self.redis_url), ("QDRANT_URL", self.qdrant_url)]:
             if "localhost" in val or "127.0.0.1" in val:
-                if is_prod:
+                if self.is_prod:
                     raise ValueError(f"CRITICAL: {key} is pointing to LOCALHOST in production environment")
                 else:
-                    print(f"WARNING: {key} is pointing to LOCALHOST in {self.env} environment. Using local shadow instance.")
+                    print(f"WARNING: {key} is pointing to LOCALHOST in {self.runtime_env} environment. Using local shadow instance.")
         
         # 3. Explicit Cloud Validation (Protocols & Domains)
         # Verify MongoDB is Atlas (if not local)
@@ -231,6 +309,7 @@ class Settings(BaseSettings):
         # Verify Qdrant is Cloud (if not local)
         if "localhost" not in self.qdrant_url and "qdrant.io" not in self.qdrant_url:
              print(f"WARNING: QDRANT_URL does not look like Qdrant Cloud but is not localhost.")
+
     prioritize_groq: bool = Field(default=True, description="Always try Groq first in dev mode")
     
     # Timeouts (seconds)
@@ -246,13 +325,6 @@ class Settings(BaseSettings):
     cb_threshold_default: int = Field(default=5, description="Default failure threshold")
     cb_cooldown_default: int = Field(default=60, description="Default cooldown period in seconds")
 
-    class Config:
-        env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        extra = "ignore"
-
-
 @lru_cache()
 def get_settings() -> Settings:
     """
@@ -264,7 +336,8 @@ def get_settings() -> Settings:
     print(f"\n{'='*50}")
     print(f" CreatorIQ Runtime Infrastructure Handshake")
     print(f"{'='*50}")
-    print(f" ENV:        {settings.env.upper()}")
+    print(f" ENV:        {settings.runtime_env.upper()}")
+    print(f" DEBUG:      {settings.debug}")
     print(f" MONGO_URI:  {settings.mongo_uri.split('@')[-1].split('?')[0] if '@' in settings.mongo_uri else 'MISSING/LOCAL'}")
     print(f" REDIS_URL:  {settings.redis_url.split('@')[-1] if '@' in settings.redis_url else 'MISSING/LOCAL'}")
     print(f" QDRANT_URL: {settings.qdrant_url if settings.qdrant_url else 'MISSING'}")

@@ -12,6 +12,7 @@ from app.agents.sub_agents.idea_generator import IdeaGeneratorAgent
 from app.agents.sub_agents.idea_ranker import IdeaRankerAgent
 from app.memory.service import MemoryService
 from app.llm.base import ErrorCode
+from app.agents.context import build_agent_context
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,10 @@ async def trend_research_node(state: Dict[str, Any]) -> Dict[str, Any]:
     trace.append("node_started:trend_research")
     
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     
-    researcher = TrendResearcherAgent(user_context=project_ctx)
+    researcher = TrendResearcherAgent(user_context=agent_ctx)
     research = await researcher.execute({
         "topic": project_ctx.get("topic", ""),
         "niche": project_ctx.get("niche", "general"),
@@ -61,10 +63,11 @@ async def idea_generation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     trace.append("node_started:idea_generation")
     
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     research_results = state.get("research_results") or []
     
-    generator = IdeaGeneratorAgent(user_context=project_ctx)
+    generator = IdeaGeneratorAgent(user_context=agent_ctx)
     ideas_res = await generator.execute({
         "research_results": research_results,
         "user_preferences": user_prefs,
@@ -100,10 +103,11 @@ async def idea_ranking_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Idea Ranking."""
     memory = MemoryService()
     project_ctx = state.get("project_context") or {}
+    agent_ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     raw_ideas = state.get("raw_ideas") or []
     
-    ranker = IdeaRankerAgent(user_context=project_ctx)
+    ranker = IdeaRankerAgent(user_context=agent_ctx)
     ranked = await ranker.execute({
         "ideas": raw_ideas,
         "user_preferences": user_prefs,
@@ -117,7 +121,8 @@ async def idea_ranking_node(state: Dict[str, Any]) -> Dict[str, Any]:
             state.get("project_id", ""),
             state.get("thread_id", ""),
             "ideas",
-            ranked_ideas
+            ranked_ideas,
+            user_id=state.get("user_id", ""),
         )
     except Exception as e:
         logger.warning("idea_ranking_node: failed to save artifacts — %s", e)

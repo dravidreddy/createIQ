@@ -3,23 +3,48 @@ API Dependencies — MongoDB / Beanie
 
 Dependency injection for routes.
 No more AsyncSession — Beanie documents are queried directly.
+
+Auth: Firebase ID tokens are verified via firebase_auth (cached).
 """
 
 from fastapi import Depends, HTTPException, status, Request
 from beanie import PydanticObjectId
 
 from app.models.user import User
-from app.utils.security import verify_token
+from app.utils.firebase_auth import verify_firebase_token
 from app.services.auth import AuthService
 from app.services.user import UserService
 from app.services.project import ProjectService
 
-async def get_current_user(request: Request) -> User:
+
+def _extract_token(request: Request) -> str | None:
+    """Extract Firebase token with zero-gap precedence.
+
+    1. Authorization Header (Bearer) — CLI / programmatic
+    2. access_token Cookie — Browser (standard)
+    3. token Query Parameter — SSE fallback
     """
-    Get current authenticated user with Zero-Gap Precedence.
-    1. Authorization Header (Bearer)
-    2. access_token Cookie
-    3. token Query Parameter (SSE Fallback)
+    # 1. Header
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        return auth_header.split(" ", 1)[1]
+
+    # 2. Cookie
+    token = request.cookies.get("access_token")
+    if token:
+        return token
+
+    # 3. Query param (SSE fallback)
+    return request.query_params.get("token")
+
+
+async def get_current_user(request: Request) -> User:
+    """Get current authenticated user via Firebase token verification.
+
+    Flow:
+      1. Extract token (header > cookie > query)
+      2. Verify with Firebase Admin SDK (cached 5 min)
+      3. Lookup User document by firebase_uid
     """
     from app.config import get_settings
     settings = get_settings()
@@ -32,23 +57,11 @@ async def get_current_user(request: Request) -> User:
                 id=PydanticObjectId(load_test_user_id),
                 email=f"loadtest_{load_test_user_id}@example.com",
                 display_name=f"Load Tester {load_test_user_id}",
-                hashed_password="...",
+                firebase_uid=f"loadtest_{load_test_user_id}",
                 is_active=True
             )
-    token = None
 
-    # 1. Header (Highest priority for CLI/Tests)
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ", 1)[1]
-
-    # 2. Cookie (Standard browser)
-    if not token:
-        token = request.cookies.get("access_token")
-
-    # 3. Query Param (SSE Fallback)
-    if not token:
-        token = request.query_params.get("token")
+    token = _extract_token(request)
 
     if not token:
         from app.utils.logging import logger
@@ -59,23 +72,21 @@ async def get_current_user(request: Request) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id = verify_token(token, token_type="access")
+    # Verify Firebase token (cached for 5 minutes)
+    firebase_user = await verify_firebase_token(token)
 
-    if not user_id:
+    if not firebase_user:
         from app.utils.logging import logger
-        logger.warning(f"Auth: Token verification failed for token type 'access'. Request from {request.client.host}")
+        logger.warning(f"Auth: Firebase token verification failed. Request from {request.client.host}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
+            detail="Invalid or expired Firebase token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # user_id is a string (ObjectId)
-    # Cache disabled to prevent stale state (e.g. has_profile stale reads)
+    # Lookup user by firebase_uid — the canonical link
     try:
-        user = await User.get(PydanticObjectId(user_id))
-    except (ValueError, TypeError):
-        user = None
+        user = await User.find_one(User.firebase_uid == firebase_user["uid"])
     except Exception:
         # DB is unreachable — return 503 so frontend knows NOT to clear session
         raise HTTPException(
@@ -85,10 +96,10 @@ async def get_current_user(request: Request) -> User:
 
     if not user:
         from app.utils.logging import logger
-        logger.warning(f"Auth: User not found for user_id {user_id}")
+        logger.warning(f"Auth: No user document for firebase_uid {firebase_user['uid']}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="User not registered. Please sign in again.",
         )
 
     if not user.is_active:

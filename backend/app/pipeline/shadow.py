@@ -59,7 +59,13 @@ async def trigger_shadow_script_generation(state: Dict[str, Any], config: Dict[s
             "timestamp": _timestamp()
         }
         
-        await memory.save_project_artifact(project_id, state.get("thread_id", ""), "shadow_script", shadow_data)
+        await memory.save_project_artifact(
+            project_id,
+            state.get("thread_id", ""),
+            "shadow_script",
+            shadow_data,
+            user_id=state.get("user_id", ""),
+        )
         logger.info(f"ShadowExecution: Successfully saved shadow script for hook: {hook_text[:30]}...")
         
     except Exception as e:

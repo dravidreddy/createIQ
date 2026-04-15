@@ -10,13 +10,14 @@ from typing import Any, Dict
 from app.agents.sub_agents.series_planner import SeriesPlannerAgent
 from app.agents.sub_agents.growth_advisor import GrowthAdvisorAgent
 from app.llm.base import ErrorCode
+from app.agents.context import build_agent_context
 
 logger = logging.getLogger(__name__)
 
 
 async def series_planning_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Series Planning."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     project_ctx = state.get("project_context") or {}
     edited_script = state.get("edited_script") or {}
     selected_idea = state.get("selected_idea") or {}
@@ -54,7 +55,7 @@ async def series_planning_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 async def growth_advisory_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Sub-node: Growth Advisory."""
-    ctx = state.get("project_context")
+    ctx = build_agent_context(state)
     user_prefs = state.get("user_preferences") or {}
     series_plan = state.get("series_plan") or []
 
