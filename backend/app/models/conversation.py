@@ -4,6 +4,7 @@ Conversation Document — MongoDB / Beanie
 AI chat sessions scoped to a project and user.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -20,8 +21,8 @@ class Conversation(Document):
 
     title: Optional[str] = None  # auto-generated or user-set
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "conversations"

@@ -5,6 +5,7 @@ Legacy model kept for backward compatibility with existing `agent_sessions` coll
 New code should use AIGeneration instead.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional, List
 
@@ -31,7 +32,7 @@ class AgentSession(Document):
 
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "agent_sessions"

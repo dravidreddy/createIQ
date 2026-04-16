@@ -6,6 +6,7 @@ Two models:
   - UserProfile: Standalone Beanie Document in `user_profiles` collection
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import List, Optional
 
@@ -32,8 +33,8 @@ class ProfileEmbed(BaseModel):
     hook_framework: Optional[str] = None
     default_cta: Optional[str] = None
     pacing_style: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 # ─── Standalone Profile Document ────────────────────────────────
@@ -63,8 +64,8 @@ class UserProfile(Document):
     pacing_style: Optional[str] = None
     preferences: dict = Field(default_factory=dict)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "user_profiles"

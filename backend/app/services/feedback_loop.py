@@ -2,6 +2,7 @@
 Feedback Loop Service — Capture and store user feedback for routing optimization.
 """
 
+from app.utils.datetime_utils import utc_now
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -44,7 +45,7 @@ class FeedbackLoopService:
             "rating": rating,
             "comment": comment,
             "metadata": metadata or {},
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": utc_now().isoformat()
         }
         
         result = await self._collection.insert_one(doc)

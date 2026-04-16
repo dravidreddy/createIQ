@@ -5,6 +5,7 @@ This model is kept as a stub for backward compatibility.
 New code should use ContentBlock + ContentVersion instead.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -20,8 +21,8 @@ class ProjectArtifact(Document):
     artifact_type: str = ""
     content: dict = Field(default_factory=dict)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "project_artifacts"

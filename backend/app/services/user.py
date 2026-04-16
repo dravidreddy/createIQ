@@ -6,6 +6,7 @@ Profile is now stored in the separate `user_profiles` collection (UserProfile).
 Legacy embedded profile reads are still supported for backward compatibility.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 from beanie import PydanticObjectId
@@ -221,7 +222,7 @@ class UserService:
                 "default_cta": standalone.default_cta,
                 "pacing_style": standalone.pacing_style,
             }
-            user.updated_at = datetime.utcnow()
+            user.updated_at = utc_now()
             await user.save()
 
         logger.info("Updated profile for user %s", user_id)

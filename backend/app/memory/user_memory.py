@@ -6,6 +6,7 @@ updates them using exponential moving average (EMA) when new signals
 arrive from the edit detection engine.
 """
 
+from app.utils.datetime_utils import utc_now
 import logging
 from datetime import datetime
 from typing import Dict
@@ -114,7 +115,7 @@ class UserMemoryStore:
                 doc.custom_signals[signal_name] = alpha * signal_value + (1 - alpha) * old_val
 
         doc.edit_count += 1
-        doc.updated_at = datetime.utcnow()
+        doc.updated_at = utc_now()
         await doc.save()
 
         logger.info(

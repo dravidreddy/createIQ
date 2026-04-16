@@ -4,6 +4,7 @@ Variant Log Document — MongoDB / Beanie
 Logs generated variants for audit trail and analytics.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -22,7 +23,7 @@ class VariantLog(Document):
     total_score: float = 0.0
     was_selected: bool = False
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "variant_logs"

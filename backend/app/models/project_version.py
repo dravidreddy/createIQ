@@ -5,6 +5,7 @@ Legacy versioning model.  New code should use ContentBlock + ContentVersion.
 Kept for backward compatibility with existing version service routes.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
@@ -29,8 +30,8 @@ class ProjectVersion(Document):
     script: Optional[str] = None
     screenplay_guidance: Optional[Dict[str, Any]] = None
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "project_versions"

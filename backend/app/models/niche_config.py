@@ -8,6 +8,7 @@ Hybrid model: JSON seed files on disk → MongoDB at runtime.
 Seeded on app startup from app/niche_configs/*.json.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -52,8 +53,8 @@ class NicheConfigModel(Document):
     # Metadata
     is_custom: bool = False  # True if user-created (not from seed files)
     created_by: Optional[str] = None  # user_id if custom
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "niche_configs"

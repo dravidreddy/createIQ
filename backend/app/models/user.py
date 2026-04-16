@@ -5,6 +5,7 @@ Core user identity linked to Firebase via firebase_uid.
 Profile is stored in a separate `user_profiles` collection.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -31,8 +32,8 @@ class User(Document):
     # New writes should go to the `user_profiles` collection.
     profile: Optional[dict] = None
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "users"

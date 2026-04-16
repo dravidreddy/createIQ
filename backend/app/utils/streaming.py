@@ -4,6 +4,7 @@ SSE Streaming Utilities
 Server-Sent Events helpers for real-time agent updates.
 """
 
+from app.utils.datetime_utils import utc_now
 import json
 from datetime import datetime
 from typing import Any, Dict, AsyncGenerator
@@ -47,7 +48,7 @@ def create_event(
     return AgentStreamEvent(
         event_type=event_type,
         agent_name=agent_name,
-        timestamp=datetime.utcnow(),
+        timestamp=utc_now(),
         data=data or {}
     )
 

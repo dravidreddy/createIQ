@@ -5,6 +5,7 @@ MongoDB storage for LangGraph checkpoints. Enables the pipeline to
 survive server restarts and resume from any interrupt point.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -23,7 +24,7 @@ class PipelineCheckpoint(Document):
     metadata: Dict[str, Any] = {}
     is_compressed: bool = False
     trace_id: Optional[str] = None  # observability linkage
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     @field_validator("checkpoint_id", "parent_checkpoint_id", mode="before")
     @classmethod

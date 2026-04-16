@@ -3,6 +3,7 @@ Version Service (V4)
 
 Manages pipeline outputs and temporary/saved versions of a project.
 """
+from app.utils.datetime_utils import utc_now
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from beanie import PydanticObjectId
@@ -32,7 +33,7 @@ class VersionService:
         
         expires_at = None
         if not is_saved:
-            expires_at = datetime.utcnow() + timedelta(hours=48)
+            expires_at = utc_now() + timedelta(hours=48)
             
         for attempt in range(3):
             try:
@@ -78,6 +79,6 @@ class VersionService:
         
         version.is_saved = True
         version.expires_at = None # Remove TTL
-        version.updated_at = datetime.utcnow()
+        version.updated_at = utc_now()
         await version.save()
         return version

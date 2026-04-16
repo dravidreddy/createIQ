@@ -4,6 +4,7 @@ Agent Schemas
 Pydantic schemas for agent execution and streaming events.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Literal
 from pydantic import BaseModel, Field, ConfigDict
@@ -43,7 +44,7 @@ class AgentStreamEvent(BaseModel):
         "done"
     ]
     agent_name: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)
     data: Dict[str, Any] = Field(default_factory=dict)
 
 

@@ -3,6 +3,7 @@ Helper script to create an initial admin user via Firebase Admin SDK.
 DEVTOOLS - DO NOT import in production code.
 """
 
+from app.utils.datetime_utils import utc_now
 import asyncio
 from datetime import datetime
 from app.models.database import init_db, close_db
@@ -49,8 +50,8 @@ async def create_admin():
             firebase_uid=fb_user.uid,
             is_active=True,
             is_verified=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=utc_now(),
+            updated_at=utc_now()
         )
         await user.insert()
         print(f"Successfully created admin user in MongoDB!")

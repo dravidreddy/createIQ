@@ -4,6 +4,7 @@ Ranking Profile Document — MongoDB / Beanie
 Per-user adaptive ranking weights for the V3.3 multi-signal scorer.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 
 from beanie import Document, Indexed
@@ -20,8 +21,8 @@ class RankingProfile(Document):
     w_novelty: float = 0.15
     w_trend: float = 0.15
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "ranking_profiles"

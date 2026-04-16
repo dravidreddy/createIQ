@@ -5,6 +5,7 @@ Versioned JSON state blob for the V3.3 adaptive engine.
 Uses optimistic locking (version field) for concurrent writes.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional, Set
 
@@ -22,8 +23,8 @@ class ProjectAgentState(Document):
 
     compressed_until: Optional[datetime] = None
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     # Allowed top-level keys in the state dict (for validation)
     ALLOWED_DOMAINS: Set[str] = {

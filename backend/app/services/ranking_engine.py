@@ -7,6 +7,7 @@ Scoring formula:
 All IDs are strings (MongoDB ObjectId).
 """
 
+from app.utils.datetime_utils import utc_now
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -121,7 +122,7 @@ async def micro_update_weights(
         row.w_novelty /= total
         row.w_trend /= total
 
-    row.updated_at = datetime.utcnow()
+    row.updated_at = utc_now()
     await row.save()
 
     logger.info(

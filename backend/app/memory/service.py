@@ -5,6 +5,7 @@ Composes vector store, user memory, and project memory into a single
 interface used by the pipeline and agent groups.
 """
 
+from app.utils.datetime_utils import utc_now
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -163,7 +164,7 @@ class MemoryService:
             "edited_content": edited,
             "diff_summary": analysis.get("diff_summary", ""),
             "preference_signals": signals,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utc_now().isoformat(),
         }
         await self.project_memory.append_edit(project_id, edit_record)
 

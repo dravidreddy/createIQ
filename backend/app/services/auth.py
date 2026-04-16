@@ -5,6 +5,7 @@ Handles user authentication via Firebase Admin SDK.
 No password hashing, no JWT minting — Firebase owns the credential lifecycle.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 from app.models.user import User
@@ -42,7 +43,7 @@ class AuthService:
             # Check if user exists by firebase_uid (canonical lookup)
             user = await User.find_one(User.firebase_uid == uid)
             if user:
-                user.last_login = datetime.utcnow()
+                user.last_login = utc_now()
                 # Sync display name if changed in Firebase
                 if display_name and user.display_name != display_name:
                     user.display_name = display_name
@@ -54,7 +55,7 @@ class AuthService:
             if user:
                 # Link the Firebase UID to this existing account
                 user.firebase_uid = uid
-                user.last_login = datetime.utcnow()
+                user.last_login = utc_now()
                 await user.save()
                 logger.info(f"Linked Firebase UID {uid} to existing user {email}")
                 return user
@@ -66,7 +67,7 @@ class AuthService:
                 firebase_uid=uid,
                 is_active=True,
                 is_verified=decoded_token.get("email_verified", False),
-                last_login=datetime.utcnow()
+                last_login=utc_now()
             )
             await user.insert()
             logger.info(f"Registered new Firebase user: {email}")

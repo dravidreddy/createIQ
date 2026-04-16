@@ -6,6 +6,7 @@ points to its current active version in the `content_versions` collection.
 Content is NEVER stored directly here — always via versions.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -34,8 +35,8 @@ class ContentBlock(Document):
     current_version_id: Optional[str] = None
 
     created_by: str  # user_id
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "content_blocks"

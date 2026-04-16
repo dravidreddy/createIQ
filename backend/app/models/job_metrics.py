@@ -4,6 +4,7 @@ Job Metrics Document — MongoDB / Beanie
 Operational metrics for job execution (budget exceeded flags, timing, etc.).
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 
 from beanie import Document, Indexed
@@ -20,8 +21,8 @@ class JobMetrics(Document):
     total_latency_ms: int = 0
     variant_count: int = 0
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "job_metrics"

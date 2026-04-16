@@ -4,6 +4,7 @@ Budget Allocation Document — MongoDB / Beanie
 Per-job budget tracking for the V3.3 cost enforcement engine.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -19,8 +20,8 @@ class BudgetAllocation(Document):
     remaining: float = 0.0  # cents remaining
     step_costs: dict = Field(default_factory=dict)  # {step_name: cost_cents}
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "budget_allocations"

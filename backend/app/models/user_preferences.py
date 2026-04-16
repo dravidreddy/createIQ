@@ -6,6 +6,7 @@ edit detection and explicit user feedback. Updated via EMA (exponential
 moving average) as users make edits throughout the pipeline.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Dict
 
@@ -23,7 +24,7 @@ class UserPreferencesModel(Document):
     engagement_style: str = "question-heavy"      # question-heavy | story-driven | data-driven
     custom_signals: Dict[str, float] = {}
     edit_count: int = 0
-    updated_at: datetime = datetime.utcnow()
+    updated_at: datetime = utc_now()
 
     class Settings:
         name = "user_preferences"

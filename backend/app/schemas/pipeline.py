@@ -5,6 +5,7 @@ Request/response schemas for the LangGraph pipeline API endpoints.
 Also contains output schemas for each pipeline stage.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
@@ -143,7 +144,7 @@ class PipelineInterruptData(BaseModel):
     message: str
     output: Any = None
     options: List[str] = ["approve", "edit", "regenerate"]
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)
     interrupt_version: int = 1
 
 
@@ -161,7 +162,7 @@ class PipelineEvent(BaseModel):
     model: Optional[str] = None
     status: Optional[str] = None  # success | fallback | failed | interrupted | error
     fallback_used: bool = False
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)
     
     # Metrics / Resilience
     final: bool = False  # True only for stream_end

@@ -296,13 +296,12 @@ class ExecutionLayer:
                 # 5. Output Validation & Repair (Tier-3)
                 json_schema = kwargs.get("response_schema")
                 if json_schema and kwargs.get("json_mode"):
+                    repair_kwargs = {**kwargs, "trace_id": trace_id, "selected_provider": name}
                     response = await self.output_guard.validate_and_repair(
                         response=response,
                         schema=json_schema,
                         messages=messages,
-                        trace_id=trace_id,
-                        selected_provider=name,
-                        **kwargs
+                        **repair_kwargs
                     )
 
                 # 6. Usage Tracking & Cost Recording

@@ -5,6 +5,7 @@ Provides versioned read/write for ProjectAgentState (MongoDB/Beanie).
 Retained as a thin module for backward compatibility with V3.3 API routes.
 """
 
+from app.utils.datetime_utils import utc_now
 import copy
 import json
 import logging
@@ -79,7 +80,7 @@ async def apply_patch(
     row.version += 1
 
     from datetime import datetime
-    row.updated_at = datetime.utcnow()
+    row.updated_at = utc_now()
     await row.save()
 
     if _check_size(new_state):

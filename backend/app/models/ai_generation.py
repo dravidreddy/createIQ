@@ -5,6 +5,7 @@ Tracks every AI generation request: prompt, response, model, cost, latency.
 Replaces the legacy `agent_sessions` collection with a cleaner, cost-aware design.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -37,7 +38,7 @@ class AIGeneration(Document):
 
     created_by: str = ""  # user_id
     trace_id: Optional[str] = None  # observability linkage
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "ai_generations"

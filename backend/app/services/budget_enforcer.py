@@ -10,6 +10,7 @@ The runtime guard is designed for atomic Redis Lua execution.
 When Redis is unavailable it falls back to a DB-based check (MongoDB/Beanie).
 """
 
+from app.utils.datetime_utils import utc_now
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
@@ -139,7 +140,7 @@ async def check_and_deduct(
     costs = dict(alloc.step_costs) if alloc.step_costs else {}
     costs[step_name] = costs.get(step_name, 0) + actual_cost_cents
     alloc.step_costs = costs
-    alloc.updated_at = datetime.utcnow()
+    alloc.updated_at = utc_now()
     await alloc.save()
     return True
 
@@ -178,5 +179,5 @@ async def _mark_budget_exceeded(job_id: str) -> None:
         await row.insert()
     else:
         row.budget_exceeded = True
-        row.updated_at = datetime.utcnow()
+        row.updated_at = utc_now()
         await row.save()

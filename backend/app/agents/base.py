@@ -5,6 +5,7 @@ Abstract base class for all AI agents in the pipeline.
 Uses LLMRouter for provider selection instead of the legacy factory.
 """
 
+from app.utils.datetime_utils import utc_now
 from abc import ABC, abstractmethod
 from typing import Dict, Any, AsyncGenerator, Optional, List
 from datetime import datetime
@@ -69,7 +70,7 @@ class BaseAgent(ABC):
             data: Additional data
         """
         entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utc_now().isoformat(),
             "agent": self.name,
             "type": log_type,
             "message": message,

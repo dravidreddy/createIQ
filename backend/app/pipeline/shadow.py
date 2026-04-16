@@ -5,6 +5,7 @@ This module provides the logic to start generating a script draft while
 the user is still reviewing and selecting a hook.
 """
 
+from app.utils.datetime_utils import utc_now
 import logging
 from typing import Any, Dict
 from app.agents.sub_agents.deep_researcher import DeepResearcherAgent
@@ -73,4 +74,4 @@ async def trigger_shadow_script_generation(state: Dict[str, Any], config: Dict[s
 
 def _timestamp() -> str:
     from datetime import datetime
-    return datetime.utcnow().isoformat() + "Z"
+    return utc_now().isoformat() + "Z"

@@ -730,14 +730,10 @@ def route_after_final_review(state: PipelineState) -> str:
     return "evaluate"
 
 
-def route_after_editing_evaluation(state: PipelineState) -> str:
-    """Special router for final script evaluation."""
+def route_after_final_review_summarize(state: PipelineState) -> str:
+    """Corrected router for final review summarization with HITL."""
     if should_interrupt(state, "final_review"):
         return "process_final_review"
-    return "summarize_context" # summarizes final_review result
-
-
-def route_after_final_review_summarize(state: PipelineState) -> str:
     return "series_planning"
 
 

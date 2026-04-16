@@ -9,6 +9,7 @@ Rules:
   - `parent_version_id` supports future branching.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -27,7 +28,7 @@ class ContentVersion(Document):
     content: dict = Field(default_factory=dict)
 
     created_by: str  # user_id
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     is_active: bool = True
 

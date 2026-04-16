@@ -5,6 +5,7 @@ Multi-tenant workspace container.  Users belong to one or more workspaces.
 Projects live inside workspaces.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import List, Optional
 
@@ -17,7 +18,7 @@ class WorkspaceMember(BaseModel):
 
     user_id: str
     role: str = "editor"  # owner | editor | viewer
-    added_at: datetime = Field(default_factory=datetime.utcnow)
+    added_at: datetime = Field(default_factory=utc_now)
 
 
 class Workspace(Document):
@@ -28,8 +29,8 @@ class Workspace(Document):
 
     members: List[WorkspaceMember] = []
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "workspaces"

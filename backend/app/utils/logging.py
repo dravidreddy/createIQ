@@ -3,7 +3,7 @@ import sys
 import time
 from typing import Dict, Any
 from contextvars import ContextVar
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger import json as jsonlogger
 
 # Centralized Trace ID for observability and response wrapping
 trace_var: ContextVar[str] = ContextVar("trace_id", default="system")

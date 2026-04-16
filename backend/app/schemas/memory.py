@@ -5,6 +5,7 @@ Pydantic schemas for the memory subsystem — user preferences,
 edit records, and vector search results.
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -28,7 +29,7 @@ class EditRecordSchema(BaseModel):
     edited_content: Any
     diff_summary: str = ""
     preference_signals: Dict[str, float] = {}
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=lambda: utc_now().isoformat())
 
 
 class PreferenceSignals(BaseModel):

@@ -4,6 +4,7 @@ Message Document — MongoDB / Beanie
 Individual messages within a conversation (user ↔ assistant).
 """
 
+from app.utils.datetime_utils import utc_now
 from datetime import datetime
 from typing import Optional
 
@@ -21,7 +22,7 @@ class Message(Document):
     content: str = ""
     metadata: dict = Field(default_factory=dict)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     class Settings:
         name = "messages"
