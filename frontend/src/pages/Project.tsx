@@ -33,7 +33,7 @@ export default function Project() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { currentProject, isLoading, fetchProject, updateProject } = useProjectStore();
-    const { status, streamedContent, threadId } = useStreamingStore();
+    const { status, streamedContent, threadId, activeAgent, interruptContext } = useStreamingStore();
     const { startPipeline, resumePipeline, stopStream, checkPipelineStatus } = usePipelineStream();
 
     // Pause pipeline streams after 10 minutes of user inactivity
@@ -105,10 +105,20 @@ export default function Project() {
 
     if (!currentProject) return null;
 
-    const currentStage = mapStatusToStage(currentProject.status, status);
+    const currentStage = mapStatusToStage(currentProject.status, status, activeAgent, interruptContext?.stage);
     const completedStages = (currentProject.completed_stages || []) as PipelineStage[];
 
     const { addMessage } = useStreamingStore();
+
+    const handleHitlSelect = async (stage: string, item: any) => {
+        if (!threadId) return;
+        try {
+            await resumePipeline(threadId, 'approve', stage, { selected_content: item });
+            toast.success('Selection confirmed');
+        } catch (err) {
+            toast.error('Failed to confirm selection');
+        }
+    };
 
     const handleStart = async () => {
         if (!id) return;
@@ -301,33 +311,81 @@ export default function Project() {
                         {/* Right Column: Results */}
                         <div className="w-full lg:w-[65%] flex flex-col overflow-y-auto h-full pr-4 pb-32 scrollbar-hide">
                             {/* Research Stage - Idea Cards */}
-                            {currentStage === 'research' && currentProject.discovered_ideas && currentProject.discovered_ideas.length > 0 && (
+                            {currentStage === 'research' && (
+                                (() => {
+                                    const ideasToRender = status === 'interrupted' && interruptContext?.stage === 'idea_selection' 
+                                        ? interruptContext.data 
+                                        : currentProject.discovered_ideas;
+
+                                    if (!ideasToRender || ideasToRender.length === 0) return null;
+
+                                    return (
+                                        <div className="space-y-8 animate-in fade-in duration-700">
+                                            <div className="flex items-center gap-3">
+                                                <Zap className="w-5 h-5 text-accent" />
+                                                <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Viral Concepts</h2>
+                                            </div>
+                                            <div className="grid gap-6 sm:grid-cols-2">
+                                                {ideasToRender.map((idea: any, i: number) => (
+                                                    <div 
+                                                        key={i} 
+                                                        onClick={() => handleHitlSelect('idea_selection', idea)}
+                                                        className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up"
+                                                        style={{ animationDelay: `${i * 150}ms` }}
+                                                    >
+                                                        <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">
+                                                            {typeof idea.title === 'string' ? idea.title : JSON.stringify(idea.title)}
+                                                        </h3>
+                                                        <p className="text-sm text-text-secondary line-clamp-3 mb-4">
+                                                            {typeof idea.description === 'string' ? idea.description : JSON.stringify(idea.description)}
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
+                                                            <span className="text-[10px] text-text-secondary font-mono">
+                                                                {typeof idea.unique_angle === 'string' ? idea.unique_angle : JSON.stringify(idea.unique_angle)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()
+                            )}
+
+                            {/* Hook Stage - Hook Cards */}
+                            {currentStage === 'hook' && status === 'interrupted' && interruptContext?.stage === 'hook_selection' && interruptContext.data && (
                                 <div className="space-y-8 animate-in fade-in duration-700">
                                     <div className="flex items-center gap-3">
-                                        <Zap className="w-5 h-5 text-accent" />
-                                        <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Viral Concepts</h2>
+                                        <Sparkles className="w-5 h-5 text-accent" />
+                                        <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Select a Hook</h2>
                                     </div>
-                                    <div className="grid gap-6 sm:grid-cols-2">
-                                        {currentProject.discovered_ideas.map((idea: any, i: number) => (
-                                            <div 
-                                                key={i} 
-                                                className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up"
-                                                style={{ animationDelay: `${i * 150}ms` }}
-                                            >
-                                                <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">
-                                                    {typeof idea.title === 'string' ? idea.title : JSON.stringify(idea.title)}
-                                                </h3>
-                                                <p className="text-sm text-text-secondary line-clamp-3 mb-4">
-                                                    {typeof idea.description === 'string' ? idea.description : JSON.stringify(idea.description)}
-                                                </p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
-                                                    <span className="text-[10px] text-text-secondary font-mono">
-                                                        {typeof idea.unique_angle === 'string' ? idea.unique_angle : JSON.stringify(idea.unique_angle)}
-                                                    </span>
+                                    <div className="grid gap-4">
+                                        {interruptContext.data.map((hook: any, i: number) => {
+                                            const hookType = typeof hook.hook_type === 'string' ? hook.hook_type : (typeof hook.type === 'string' ? hook.type : 'Variant');
+                                            const hookContent = typeof hook.script_content === 'string' ? hook.script_content : (typeof hook.content === 'string' ? hook.content : JSON.stringify(hook));
+                                            const hookWhy = typeof hook.psychological_trigger === 'string' ? hook.psychological_trigger : (typeof hook.reason === 'string' ? hook.reason : 'Grabs attention');
+
+                                            return (
+                                                <div 
+                                                    key={i} 
+                                                    onClick={() => handleHitlSelect('hook_selection', hook)}
+                                                    className="card-minimal p-6 group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up flex flex-col gap-3"
+                                                    style={{ animationDelay: `${i * 150}ms` }}
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-mono text-text-secondary uppercase tracking-wider">Option {i + 1}</span>
+                                                        <span className="badge-minimal border-accent/30 text-accent">{hookType}</span>
+                                                    </div>
+                                                    <p className="text-base text-text-primary font-medium leading-relaxed">
+                                                        {hookContent}
+                                                    </p>
+                                                    <div className="text-xs text-text-secondary mt-2">
+                                                        <strong className="text-text-primary/70">Why it works:</strong> {hookWhy}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
@@ -434,11 +492,25 @@ export default function Project() {
     );
 }
 
-function mapStatusToStage(status: string, streamStatus: string): PipelineStage {
+function mapStatusToStage(status: string, streamStatus: string, activeAgent: string | null, interruptStage: string | undefined): PipelineStage {
     if (streamStatus === 'running') {
+        const agent = activeAgent?.toLowerCase() || '';
+        if (agent.includes('idea') || agent.includes('research')) return 'research';
+        if (agent.includes('hook') || agent.includes('screenplay')) return 'hook';
+        if (agent.includes('script') || agent.includes('fact')) return 'script';
+        if (agent.includes('edit') || agent.includes('structure') || agent.includes('engagement')) return 'edit';
+        
         if (status === 'idea_discovery') return 'research';
         if (status === 'screenplay') return 'hook';
         return 'script';
+    }
+
+    if (streamStatus === 'interrupted' && interruptStage) {
+        if (interruptStage === 'idea_selection') return 'research';
+        if (interruptStage === 'hook_selection') return 'hook';
+        if (interruptStage === 'script_edit') return 'script';
+        if (interruptStage === 'structure_edit' || interruptStage === 'final_review') return 'edit';
+        if (interruptStage === 'strategy_approval') return 'output';
     }
     
     switch (status) {
@@ -451,6 +523,8 @@ function mapStatusToStage(status: string, streamStatus: string): PipelineStage {
             return 'edit';
         case 'completed':
             return 'output';
+        case 'in_progress':
+            return 'research';
         default:
             return 'research';
     }
