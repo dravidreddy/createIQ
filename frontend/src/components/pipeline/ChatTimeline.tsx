@@ -54,7 +54,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         return (
             <div className="flex justify-end animate-in slide-up">
                 <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-accent text-bg font-medium shadow-glow">
-                    {message.content}
+                    {typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}
                 </div>
             </div>
         );
@@ -69,7 +69,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                         <AlertCircle className="w-4 h-4 text-red-400" />
                     </div>
                     <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-red-500/10 border border-red-500/20 text-red-300 text-sm max-w-[80%]">
-                        {message.content}
+                        {typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}
                     </div>
                 </div>
             );
@@ -81,7 +81,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                         <AlertCircle className="w-4 h-4 text-amber-400" />
                     </div>
                     <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm max-w-[80%]">
-                        ⏸ {message.content}
+                        ⏸ {typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}
                     </div>
                 </div>
             );
@@ -126,7 +126,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                 <div className="flex-1 min-w-0">
                     <div className="p-5 rounded-2xl rounded-bl-md bg-surface/80 border border-white/5 shadow-xl">
                         <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-text-primary/90 break-words">
-                            {message.content}
+                            {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
                         </pre>
                     </div>
                 </div>

@@ -86,8 +86,12 @@ export default function Project() {
             }, 10); 
             return () => clearInterval(interval);
         } else if (status !== 'running') {
-            setDisplayContent(streamedContent || currentProject?.generated_script || '');
-            contentRef.current = streamedContent || currentProject?.generated_script || '';
+            let safeContent = streamedContent || currentProject?.generated_script || '';
+            if (typeof safeContent !== 'string') {
+                try { safeContent = JSON.stringify(safeContent, null, 2); } catch { safeContent = String(safeContent); }
+            }
+            setDisplayContent(safeContent);
+            contentRef.current = safeContent;
         }
     }, [streamedContent, status, currentProject?.generated_script]);
 
@@ -196,7 +200,7 @@ export default function Project() {
                     <div className="h-4 w-[1px] bg-white/10" />
                     <div className="flex items-center gap-3">
                         <InlineEditTitle 
-                            initialTitle={currentProject.title}
+                            initialTitle={typeof currentProject.title === 'string' ? currentProject.title : 'Untitled Project'}
                             onSave={async (newTitle) => {
                                 if (newTitle !== currentProject.title) {
                                     await updateProject(currentProject.id, { title: newTitle })
@@ -310,11 +314,17 @@ export default function Project() {
                                                 className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up"
                                                 style={{ animationDelay: `${i * 150}ms` }}
                                             >
-                                                <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">{idea.title}</h3>
-                                                <p className="text-sm text-text-secondary line-clamp-3 mb-4">{idea.description}</p>
+                                                <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">
+                                                    {typeof idea.title === 'string' ? idea.title : JSON.stringify(idea.title)}
+                                                </h3>
+                                                <p className="text-sm text-text-secondary line-clamp-3 mb-4">
+                                                    {typeof idea.description === 'string' ? idea.description : JSON.stringify(idea.description)}
+                                                </p>
                                                 <div className="flex items-center gap-2">
                                                     <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
-                                                    <span className="text-[10px] text-text-secondary font-mono">{idea.unique_angle}</span>
+                                                    <span className="text-[10px] text-text-secondary font-mono">
+                                                        {typeof idea.unique_angle === 'string' ? idea.unique_angle : JSON.stringify(idea.unique_angle)}
+                                                    </span>
                                                 </div>
                                             </div>
                                         ))}
