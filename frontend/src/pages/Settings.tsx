@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { userApi } from '../services/api'
 import { Profile } from '../types'
-import { User, Save, Loader2, Sparkles, Shield, Globe } from 'lucide-react'
+import { User, Save, Loader2, Sparkles, Shield, Globe, Mic } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { auth } from '../lib/firebase'
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth'
+import { VoiceProfile } from '../components/settings/VoiceProfile'
+import WorkspaceSettings from '../components/settings/WorkspaceSettings'
 
 const NICHES = ['Tech', 'Fitness', 'Finance', 'Education', 'Entertainment', 'Gaming', 'Lifestyle', 'Travel', 'Food', 'Beauty', 'Other']
 const STYLES = ['Educational', 'Entertaining', 'Inspirational', 'Casual', 'Professional', 'Storytelling', 'Tutorial']
@@ -20,7 +22,7 @@ export default function Settings() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [isSavingUser, setIsSavingUser] = useState(false)
-    const [activeTab, setActiveTab] = useState<'persona' | 'account' | 'security' | 'connections'>('persona')
+    const [activeTab, setActiveTab] = useState<'persona' | 'voice' | 'workspaces' | 'account' | 'security' | 'connections'>('persona')
 
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
@@ -168,6 +170,18 @@ export default function Settings() {
                         className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'persona' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
                         <Sparkles className="w-4 h-4" />
                         AI Persona
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('voice')}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'voice' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
+                        <Mic className="w-4 h-4" />
+                        Voice Profile
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('workspaces')}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'workspaces' ? 'bg-accent/5 text-accent' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}>
+                        <Shield className="w-4 h-4" />
+                        Team & Workspaces
                     </button>
                     <button 
                         onClick={() => setActiveTab('account')}
@@ -389,6 +403,20 @@ export default function Settings() {
                                     />
                                 </div>
                             </div>
+                        </section>
+                    )}
+
+                    {/* Voice Profile Section */}
+                    {activeTab === 'voice' && (
+                        <section className="animate-fade-in">
+                            <VoiceProfile />
+                        </section>
+                    )}
+
+                    {/* Team & Workspaces Section */}
+                    {activeTab === 'workspaces' && (
+                        <section className="animate-fade-in">
+                            <WorkspaceSettings />
                         </section>
                     )}
 

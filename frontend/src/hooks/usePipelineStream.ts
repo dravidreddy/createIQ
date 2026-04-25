@@ -8,7 +8,7 @@ import { getBaseUrl } from '../services/api';
 export const usePipelineStream = () => {
   const { 
     setStatus, setActiveAgent, addLog, setCost, setInterruptContext, setError, reset,
-    appendStreamedContent, setMetrics
+    appendStreamedContent, setMetrics, addMessage, updateLastAgentOutput
   } = useStreamingStore();
   const { addStreamEvent } = useProjectStore();
   
@@ -22,10 +22,35 @@ export const usePipelineStream = () => {
   const gapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastHeartbeatRef = useRef<number>(Date.now());
 
+  // Node name → human-readable label
+  const nodeLabels: Record<string, string> = {
+    load_memory: '📂 Loading your preferences...',
+    validate_inputs: '🛡️ Validating inputs...',
+    trend_research: '🔍 Scanning trending topics...',
+    idea_generation: '💡 Brainstorming content angles...',
+    idea_ranking: '🏆 Ranking ideas by potential...',
+    hook_creation: '🪝 Crafting attention hooks...',
+    hook_evaluation: '📊 Evaluating hook quality...',
+    deep_research: '📚 Deep diving into research...',
+    script_drafting: '✍️ Writing the first draft...',
+    fact_checking: '🔬 Verifying facts and sources...',
+    structure_analysis: '🏗️ Analyzing script structure...',
+    pacing_optimization: '⚡ Optimizing pacing...',
+    line_editing: '✏️ Polishing language and tone...',
+    engagement_boosting: '🚀 Adding engagement triggers...',
+    final_review: '👀 Final quality review...',
+    series_planning: '📅 Building content strategy...',
+    growth_advisory: '📈 Generating growth tips...',
+    save_results: '💾 Saving your content...',
+    thumbnail_brief: '🎨 Creating thumbnail brief...',
+    evaluate: '📊 Evaluating quality...',
+    summarize_context: '📝 Summarizing context...',
+    state_sentinel: '🛡️ Running safety checks...',
+  };
+
   const releaseBuffer = useCallback(() => {
     if (eventBufferRef.current.size === 0) return;
     
-    // Sort keys and take the smallest available (the gap we were waiting for)
     const sortedSeqs = Array.from(eventBufferRef.current.keys()).sort((a, b) => a - b);
     const nextAvailable = sortedSeqs[0];
     
@@ -33,7 +58,6 @@ export const usePipelineStream = () => {
     const nextEvent = eventBufferRef.current.get(nextAvailable);
     eventBufferRef.current.delete(nextAvailable);
     
-    // Jump forward
     lastSeqRef.current = nextAvailable - 1;
     processEvent(nextEvent);
   }, []);
@@ -45,6 +69,8 @@ export const usePipelineStream = () => {
     const batch = [...batchQueueRef.current];
     batchQueueRef.current = [];
     
+    const _id = () => `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
     batch.forEach((event: StreamEvent) => {
         const type = event.type;
         
@@ -57,16 +83,35 @@ export const usePipelineStream = () => {
             useStreamingStore.getState().setThreadId(threadId);
         } 
         
-        // Transitions
+        // Agent Thinking / Activity → Chat messages
         else if (type === 'agent_start' || type === 'group_start') {
             setActiveAgent(event.content || event.node || event.stage);
             addLog(event);
+            const node = event.node || event.stage || '';
+            const label = nodeLabels[node] || event.content || `Running ${node}...`;
+            addMessage({
+                id: _id(), role: 'agent', type: 'thinking',
+                content: typeof label === 'string' ? label : String(label),
+                node, timestamp: Date.now(),
+            });
         } 
         
-        // Tokens with Node Isolation
+        // Backend thinking events (Option A rich progress)
+        else if (type === 'thinking' || type === 'progress') {
+            const msg = typeof event.content === 'string' ? event.content : (event as any).message || (event as any).data?.message || '';
+            if (msg) {
+                addMessage({
+                    id: _id(), role: 'agent', type: 'thinking',
+                    content: msg, node: event.node, timestamp: Date.now(),
+                });
+            }
+        }
+        
+        // Tokens → stream into last agent output bubble
         else if (type === 'token') {
             const token = typeof event.content === 'string' ? event.content : (event as any).data?.token;
             appendStreamedContent(token, event.node);
+            updateLastAgentOutput(token);
         } 
         
         // Performance & Telemetry
@@ -77,6 +122,15 @@ export const usePipelineStream = () => {
             const cost = event.cost_cents ?? (event as any).data?.total_cost;
             if (cost !== undefined) setCost(cost);
             addLog(event);
+            // Progress checkmark in chat
+            const node = event.node || '';
+            if (node && !['evaluate', 'summarize_context', 'state_sentinel', 'auto_approve_ideas', 'auto_approve_hooks'].includes(node)) {
+                addMessage({
+                    id: _id(), role: 'agent', type: 'progress',
+                    content: `✓ ${node.replace(/_/g, ' ')}`,
+                    node, timestamp: Date.now(),
+                });
+            }
         } 
         
         // HITL Interrupts
@@ -89,6 +143,11 @@ export const usePipelineStream = () => {
                 message: interruptData?.message,
                 data: interruptData?.output || interruptData?.data
             });
+            addMessage({
+                id: _id(), role: 'system', type: 'interrupt',
+                content: interruptData?.message || 'Your input is needed',
+                timestamp: Date.now(),
+            });
         } 
         
         // Failure & Recovery
@@ -96,17 +155,22 @@ export const usePipelineStream = () => {
             setStatus('error');
             const errorMsg = typeof event.content === 'string' ? event.content : (event as any).data?.message;
             setError(errorMsg || 'Pipeline error');
+            addMessage({
+                id: _id(), role: 'system', type: 'error',
+                content: errorMsg || 'Pipeline error',
+                timestamp: Date.now(),
+            });
         } 
         
         // Standardized Termination
         else if (type === 'stream_end') {
-            const status = event.status || 'done';
+            const status = (event.status || 'done') as string;
             if (status === 'interrupted') setStatus('interrupted');
             else if (status === 'error') setStatus('error');
+            else if (status === 'cancelled') setStatus('done');
             else setStatus('done');
             
             if (event.final) {
-                // Clear any remaining gap timers
                 if (gapTimerRef.current) clearTimeout(gapTimerRef.current);
             }
         }
@@ -115,7 +179,7 @@ export const usePipelineStream = () => {
     });
 
     rafRef.current = null;
-  }, [addLog, addStreamEvent, setActiveAgent, setCost, setError, setInterruptContext, setStatus, appendStreamedContent, setMetrics]);
+  }, [addLog, addStreamEvent, setActiveAgent, setCost, setError, setInterruptContext, setStatus, appendStreamedContent, setMetrics, addMessage, updateLastAgentOutput]);
 
   const processEvent = useCallback((dataObj: any) => {
     const seq = dataObj.seq ?? dataObj.sequence_id ?? -1;

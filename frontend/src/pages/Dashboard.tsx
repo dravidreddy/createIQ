@@ -50,10 +50,12 @@ export default function Dashboard() {
             const project = await createProject(finalTitle, topic.trim(), projectType, requiresContinuity)
             toast.success(projectType === 'series' ? 'Series created' : 'Project initialized')
             
+            // Pass mode and platform selection to the project page via URL params
+            const params = new URLSearchParams({ mode, platform })
             if (projectType === 'series') {
-                navigate(`/series/${project.id}`)
+                navigate(`/series/${project.id}?${params}`)
             } else {
-                navigate(`/project/${project.id}`)
+                navigate(`/project/${project.id}?${params}`)
             }
         } catch (error: any) {
             toast.error(error.response?.data?.detail || 'Failed to initialize')

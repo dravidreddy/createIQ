@@ -25,6 +25,7 @@ from app.pipeline.streaming import (
     agent_complete_event,
     node_complete_event,
     metrics_event,
+    thinking_event,
 )
 
 settings = get_settings()
@@ -192,25 +193,34 @@ async def run_pipeline_async(
                                 await emit_event(sse_line)
                                 seq = await get_next_seq()
 
-                        # Progress visibility: predict next node or emit generic progress
-                        # In LangGraph, we can't easily see the *next* node before it starts in astream()
-                        # so we emit progress when the *current* node finishes based on common flow.
+                        # Progress visibility: rich thinking messages
                         progress_map = {
-                            "trend_research": "Analyzing trends...",
-                            "idea_generation": "Brainstorming ideas...",
-                            "hook_creation": "Crafting hooks...",
-                            "deep_research": "Deep diving into data...",
-                            "script_drafting": "Writing script...",
+                            "load_memory": "📂 Loading your preferences and past context...",
+                            "validate_inputs": "🛡️ Validating inputs for safety...",
+                            "trend_research": "🔍 Scanning trending topics and viral patterns...",
+                            "idea_generation": "💡 Brainstorming creative angles for your topic...",
+                            "idea_ranking": "🏆 Ranking ideas by engagement potential...",
+                            "hook_creation": "🪝 Crafting attention-grabbing hooks...",
+                            "hook_evaluation": "📊 Evaluating hook effectiveness...",
+                            "deep_research": "📚 Deep diving into research data...",
+                            "script_drafting": "✍️ Writing the first draft...",
+                            "fact_checking": "🔬 Verifying facts and sources...",
+                            "structure_analysis": "🏗️ Analyzing script structure and flow...",
+                            "pacing_optimization": "⚡ Optimizing pacing for retention...",
+                            "line_editing": "✏️ Polishing language and tone...",
+                            "engagement_boosting": "🚀 Adding engagement triggers...",
+                            "final_review": "👀 Final quality review...",
+                            "series_planning": "📅 Building content strategy...",
+                            "growth_advisory": "📈 Generating growth recommendations...",
+                            "save_results": "💾 Saving your content...",
+                            "thumbnail_brief": "🎨 Creating thumbnail brief...",
                         }
                         if node_name in progress_map:
                             seq = await get_next_seq()
-                            await emit_event(json.dumps({
-                                "thread_id": thread_id,
-                                "request_id": request_id,
-                                "seq": seq,
-                                "type": "progress",
-                                "message": progress_map[node_name]
-                            }))
+                            # Emit actual thinking_event for the next implied action
+                            # We don't know the strictly next node here, but we can emit a general thinking pulse.
+                            # In real execution, agent_start will also trigger a thinking pulse.
+                            await emit_event(thinking_event(thread_id, request_id, seq, progress_map[node_name], node_name))
 
         # 2. Final Flush & Metrics
         await flush_tokens()

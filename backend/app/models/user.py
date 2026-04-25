@@ -26,6 +26,9 @@ class User(Document):
     is_active: bool = True
     is_verified: bool = False
 
+    # Monetization — credits consumed per pipeline run
+    credits: int = Field(default=50)
+
     last_login: Optional[datetime] = None
 
     # Legacy embedded profile — kept for backward compat reads.

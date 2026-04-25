@@ -21,6 +21,50 @@
             "latency_tier": "ultra_fast",
             "default_timeout": 20.0,
             "warmup": true
+        },
+        "gemini-1-5-pro": {
+            "provider": "google",
+            "model_id": "gemini-1.5-pro",
+            "capabilities": ["quality", "CREATIVE", "LONG_FORM", "STRATEGY", "reasoning", "drafting"],
+            "context_limit": 1000000,
+            "cost_per_1k_input": 0.35,
+            "cost_per_1k_output": 1.05,
+            "latency_tier": "medium",
+            "default_timeout": 60.0,
+            "warmup": false
+        },
+        "gemini-2-0-flash": {
+            "provider": "google",
+            "model_id": "gemini-2.0-flash",
+            "capabilities": ["fast", "drafting", "EDITING", "scoring", "repair", "summarization"],
+            "context_limit": 1000000,
+            "cost_per_1k_input": 0.01,
+            "cost_per_1k_output": 0.04,
+            "latency_tier": "low",
+            "default_timeout": 30.0,
+            "warmup": false
+        },
+        "gpt-4o-mini": {
+            "provider": "openai",
+            "model_id": "gpt-4o-mini",
+            "capabilities": ["fast", "scoring", "routing", "classification", "repair", "EDITING"],
+            "context_limit": 128000,
+            "cost_per_1k_input": 0.015,
+            "cost_per_1k_output": 0.06,
+            "latency_tier": "low",
+            "default_timeout": 30.0,
+            "warmup": false
+        },
+        "claude-3-5-sonnet": {
+            "provider": "anthropic",
+            "model_id": "claude-sonnet-4-20250514",
+            "capabilities": ["quality", "CREATIVE", "LONG_FORM", "STRATEGY", "reasoning", "drafting", "editing", "refinement"],
+            "context_limit": 200000,
+            "cost_per_1k_input": 0.30,
+            "cost_per_1k_output": 1.50,
+            "latency_tier": "medium",
+            "default_timeout": 60.0,
+            "warmup": false
         }
     },
     "routing_defaults": {
@@ -36,8 +80,15 @@
         "repair": "llama-3-1-8b"
     },
     "fallbacks": {
-        "llama-3-3-70b": ["llama-3-1-8b"],
-        "llama-3-1-8b": ["llama-3-3-70b"],
-        "groq": ["llama-3-3-70b", "llama-3-1-8b"]
+        "llama-3-3-70b": ["gemini-2-0-flash", "gpt-4o-mini", "claude-3-5-sonnet"],
+        "llama-3-1-8b": ["gemini-2-0-flash", "gpt-4o-mini", "llama-3-3-70b"],
+        "gemini-1-5-pro": ["claude-3-5-sonnet", "llama-3-3-70b", "gpt-4o-mini"],
+        "gemini-2-0-flash": ["llama-3-1-8b", "gpt-4o-mini"],
+        "gpt-4o-mini": ["gemini-2-0-flash", "llama-3-1-8b"],
+        "claude-3-5-sonnet": ["gemini-1-5-pro", "llama-3-3-70b", "gpt-4o-mini"],
+        "groq": ["gemini-2-0-flash", "gpt-4o-mini", "claude-3-5-sonnet"],
+        "google": ["claude-3-5-sonnet", "gpt-4o-mini", "llama-3-3-70b"],
+        "openai": ["gemini-2-0-flash", "claude-3-5-sonnet", "llama-3-3-70b"],
+        "anthropic": ["gemini-1-5-pro", "gpt-4o-mini", "llama-3-3-70b"]
     }
 }

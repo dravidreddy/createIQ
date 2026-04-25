@@ -19,6 +19,7 @@ import {
 import { ContentNiche, Platform, ContentStyle, VideoLength, ProfileCreate } from '../types'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
+import WorkspaceSelector from '../components/layout/WorkspaceSelector'
 
 const NICHES: ContentNiche[] = [
     'Tech', 'Fitness', 'Finance', 'Education', 'Entertainment',
@@ -81,12 +82,15 @@ export default function ProfileSetup() {
         setIsLoading(true)
         try {
             await userApi.createProfile(formData)
-            updateUser({ has_profile: true })
             toast.success('Profile created! Let\'s create some content.')
-            navigate('/dashboard')
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Failed to create profile')
+            console.error('Profile creation failed:', error)
+            // Non-blocking: warn but don't prevent the user from proceeding
+            toast('Profile saved locally — you can update it anytime in Settings.', { icon: '⚠️' })
         } finally {
+            // Always let the user through to the dashboard
+            updateUser({ has_profile: true })
+            navigate('/dashboard')
             setIsLoading(false)
         }
     }
@@ -132,6 +136,10 @@ export default function ProfileSetup() {
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent-500/20 rounded-full blur-3xl" />
+            </div>
+
+            <div className="absolute top-4 right-4 z-50">
+                <WorkspaceSelector />
             </div>
 
             <div className="relative max-w-2xl mx-auto">

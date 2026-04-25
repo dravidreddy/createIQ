@@ -107,3 +107,6 @@ class PipelineState(TypedDict):
     napos_niche: Optional[str]           # Active niche for this run (e.g. 'fitness')
     napos_layers_used: List[str]         # Which layers were composed per agent
     napos_prompt_hash: Optional[str]     # Hash of last composed prompt (A/B tracking)
+
+    # ── Post-Pipeline Outputs ─────────────────────────────────
+    thumbnail_brief: Optional[Dict[str, Any]]  # Auto-generated thumbnail concept

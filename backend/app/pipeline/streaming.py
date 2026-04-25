@@ -60,6 +60,18 @@ def group_complete_event(thread_id: str, request_id: str, seq: int, stage: str, 
     ))
 
 
+def thinking_event(thread_id: str, request_id: str, seq: int, message: str, node: str = None) -> str:
+    """Explicitly emit an agent thinking event."""
+    return format_sse(PipelineEvent(
+        type="thinking",
+        seq=seq,
+        thread_id=thread_id,
+        request_id=request_id,
+        node=node,
+        content=message
+    ))
+
+
 def agent_start_event(thread_id: str, request_id: str, seq: int, node: str, stage: str = None, message: str = None) -> str:
     """Signal that a specific agent/node has started."""
     return format_sse(PipelineEvent(

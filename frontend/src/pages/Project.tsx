@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
-import { useStreamingStore } from '../store/streamingStore';
+import { useStreamingStore, createMsgId } from '../store/streamingStore';
 import { usePipelineStream } from '../hooks/usePipelineStream';
 import { useInactivityTimeout } from '../hooks/useInactivityTimeout';
+import { pipelineApi } from '../services/api';
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -11,30 +12,49 @@ import {
   ChevronRight, 
   History,
   Zap,
-  Play
+  Play,
+  Square,
+  Coins
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PipelineFlow, PipelineStage } from '../components/pipeline/PipelineFlow';
+import { ChatTimeline } from '../components/pipeline/ChatTimeline';
 import { PlatformSelector, Platform } from '../components/project/PlatformSelector';
 import { ModeSelector, ExecutionMode } from '../components/project/ModeSelector';
 import { OutputEditor } from '../components/project/OutputEditor';
 import { MicButton } from '../components/ui/MicButton';
+import { VersionHistory } from '../components/project/VersionHistory';
+import { HookTester } from '../components/project/HookTester';
+import { ThumbnailBrief } from '../components/project/ThumbnailBrief';
+import { PricingModal } from '../components/billing/PricingModal';
+import { useAuthStore } from '../store/authStore';
 
 export default function Project() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { currentProject, isLoading, fetchProject, updateProject } = useProjectStore();
     const { status, streamedContent, threadId } = useStreamingStore();
-    const { startPipeline, resumePipeline, checkPipelineStatus } = usePipelineStream();
+    const { startPipeline, resumePipeline, stopStream, checkPipelineStatus } = usePipelineStream();
 
     // Pause pipeline streams after 10 minutes of user inactivity
     useInactivityTimeout();
 
-    const [platform, setPlatform] = useState<Platform>('youtube');
-    const [mode, setMode] = useState<ExecutionMode>('auto');
+    const [searchParams] = useSearchParams();
+
+    const [platform, setPlatform] = useState<Platform>(() => {
+        const p = searchParams.get('platform');
+        return (p as Platform) || 'youtube';
+    });
+    const [mode, setMode] = useState<ExecutionMode>(() => {
+        const m = searchParams.get('mode');
+        return (m as ExecutionMode) || 'auto';
+    });
     const [displayContent, setDisplayContent] = useState('');
     const [instruction, setInstruction] = useState('');
     const contentRef = useRef('');
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [pricingOpen, setPricingOpen] = useState(false);
+    const { user } = useAuthStore();
 
     useEffect(() => {
         if (id) {
@@ -84,6 +104,8 @@ export default function Project() {
     const currentStage = mapStatusToStage(currentProject.status, status);
     const completedStages = (currentProject.completed_stages || []) as PipelineStage[];
 
+    const { addMessage } = useStreamingStore();
+
     const handleStart = async () => {
         if (!id) return;
         const platformLabels: Record<Platform, string> = {
@@ -94,6 +116,16 @@ export default function Project() {
             tiktok: 'TikTok',
         };
         const selectedPlatform = platformLabels[platform];
+
+        // Add user prompt to chat timeline
+        addMessage({
+            id: createMsgId(),
+            role: 'user',
+            type: 'prompt',
+            content: currentProject.topic || 'Start pipeline',
+            timestamp: Date.now(),
+        });
+
         try {
             await startPipeline(id, currentProject.topic || "", { 
                 niche: currentProject.niche || 'general',
@@ -101,10 +133,29 @@ export default function Project() {
                 platform: selectedPlatform,
                 execution_mode: mode
             });
-            toast.success('Pipeline engaged');
-        } catch (err) {
-            toast.error('Failed to start pipeline');
+        } catch (err: any) {
+            if (err?.response?.status === 402) {
+                toast.error('Insufficient credits');
+                setPricingOpen(true);
+            } else {
+                toast.error('Failed to start pipeline');
+            }
         }
+    };
+
+    const handleStop = async () => {
+        // Abort SSE stream immediately
+        stopStream();
+        useStreamingStore.getState().setStatus('done');
+        // Tell backend to halt
+        if (threadId) {
+            try {
+                await pipelineApi.stop(threadId);
+            } catch (e) {
+                console.error('Stop failed:', e);
+            }
+        }
+        toast.success('Pipeline stopped');
     };
 
     const handleFeedback = async (text?: string) => {
@@ -117,10 +168,18 @@ export default function Project() {
 
         if (!feedback.trim() || !threadId) return;
 
+        // Add user message to chat timeline
+        addMessage({
+            id: createMsgId(),
+            role: 'user',
+            type: 'prompt',
+            content: feedback,
+            timestamp: Date.now(),
+        });
+        setInstruction('');
+
         try {
             await resumePipeline(threadId, 'edit', currentProject.status, { feedback });
-            setInstruction('');
-            toast.success('Instruction sent');
         } catch (err) {
             toast.error('Failed to send instruction');
         }
@@ -155,11 +214,24 @@ export default function Project() {
                     <div className="h-6 w-[1px] bg-white/10 mx-2" />
                     <PlatformSelector selected={platform} onChange={setPlatform} />
                     <div className="h-6 w-[1px] bg-white/10 mx-2" />
-                    <button className="btn-secondary py-1.5 px-3 text-xs gap-2">
+                    {/* Credit Display */}
+                    <button
+                        onClick={() => setPricingOpen(true)}
+                        className="flex items-center gap-2 py-1.5 px-3 text-xs font-medium rounded-xl bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 transition-all"
+                    >
+                        <Coins className="w-3.5 h-3.5" />
+                        {user?.credits ?? 0}
+                        <span className="text-text-secondary">credits</span>
+                    </button>
+                    <div className="h-6 w-[1px] bg-white/10 mx-2" />
+                    <button 
+                        onClick={() => setHistoryOpen(true)}
+                        className="btn-secondary py-1.5 px-3 text-xs gap-2"
+                    >
                         <History className="w-4 h-4" />
                         Versions
                     </button>
-                    {status === 'idle' && (
+                    {status === 'idle' || status === 'done' ? (
                         <button 
                             onClick={handleStart} 
                             data-testid="project-execute-btn"
@@ -168,7 +240,16 @@ export default function Project() {
                             <Play className="w-3.5 h-3.5 fill-current" />
                             Execute
                         </button>
-                    )}
+                    ) : status === 'running' ? (
+                        <button 
+                            onClick={handleStop} 
+                            data-testid="project-stop-btn"
+                            className="flex items-center gap-2 py-1.5 px-4 text-xs font-medium rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all"
+                        >
+                            <Square className="w-3.5 h-3.5 fill-current" />
+                            Stop
+                        </button>
+                    ) : null}
                 </div>
             </header>
 
@@ -178,98 +259,122 @@ export default function Project() {
             </div>
 
             {/* Main Workspace */}
-            <main className="flex-1 workspace-container relative">
+            <main className="flex-1 workspace-container relative px-6">
                 
                 {/* Active Stage Overlay */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none overflow-hidden -z-10">
                     <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
                 </div>
 
-                {/* Content Area */}
-                <div className="space-y-12 animate-in slide-up">
-                    {/* Research Stage View */}
-                    {currentStage === 'research' && (
-                        <div className="space-y-8 max-w-4xl mx-auto">
-                            <div className="text-center space-y-4">
-                                <Zap className="w-8 h-8 text-accent mx-auto" />
-                                <h2 className="text-3xl font-display font-bold">Discovery Phase</h2>
-                                <p className="text-text-secondary max-w-lg mx-auto">Gathering intelligence and viral signals for your topic.</p>
+                {status === 'idle' && !currentProject.discovered_ideas?.length && !displayContent ? (
+                    /* Hero Empty State */
+                    <div className="flex flex-col items-center justify-center h-[50vh] animate-in zoom-in duration-700">
+                        <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-6 shadow-glow">
+                            <Sparkles className="w-10 h-10 text-accent" />
+                        </div>
+                        <h1 className="text-4xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">CreatorIQ Pipeline</h1>
+                        <p className="text-text-secondary text-lg mb-8 text-center max-w-md">The most advanced AI engine for creating viral video concepts and scripts.</p>
+                        <button 
+                            onClick={handleStart} 
+                            className="btn-primary py-3 px-8 text-sm gap-2 shadow-glow animate-pulse hover:animate-none"
+                        >
+                            <Play className="w-4 h-4 fill-current" />
+                            Start Pipeline
+                        </button>
+                    </div>
+                ) : (
+                    /* Split View Layout */
+                    <div className="lg:flex lg:gap-8 animate-in slide-up h-[calc(100vh-16rem)]">
+                        {/* Left Column: Chat Timeline */}
+                        <div className="w-full lg:w-[35%] flex flex-col bg-surface/30 rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden h-full">
+                            <div className="p-4 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--color-accent),0.8)]" />
+                                <span className="text-xs font-mono uppercase tracking-widest text-text-secondary">Activity Feed</span>
                             </div>
+                            <ChatTimeline />
+                        </div>
 
-                            {status === 'running' && !currentProject.discovered_ideas?.length ? (
-                                <div className="py-20 flex flex-col items-center gap-4">
-                                    <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-accent animate-[shimmer_2s_infinite]" style={{ width: '40%' }} />
+                        {/* Right Column: Results */}
+                        <div className="w-full lg:w-[65%] flex flex-col overflow-y-auto h-full pr-4 pb-32 scrollbar-hide">
+                            {/* Research Stage - Idea Cards */}
+                            {currentStage === 'research' && currentProject.discovered_ideas && currentProject.discovered_ideas.length > 0 && (
+                                <div className="space-y-8 animate-in fade-in duration-700">
+                                    <div className="flex items-center gap-3">
+                                        <Zap className="w-5 h-5 text-accent" />
+                                        <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Viral Concepts</h2>
                                     </div>
-                                    <p className="text-xs text-text-secondary font-mono animate-pulse uppercase tracking-[0.2em]">Scanning knowledge base...</p>
+                                    <div className="grid gap-6 sm:grid-cols-2">
+                                        {currentProject.discovered_ideas.map((idea: any, i: number) => (
+                                            <div 
+                                                key={i} 
+                                                className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up"
+                                                style={{ animationDelay: `${i * 150}ms` }}
+                                            >
+                                                <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">{idea.title}</h3>
+                                                <p className="text-sm text-text-secondary line-clamp-3 mb-4">{idea.description}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
+                                                    <span className="text-[10px] text-text-secondary font-mono">{idea.unique_angle}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="grid gap-6 sm:grid-cols-2">
-                                    {(currentProject.discovered_ideas || []).map((idea: any, i: number) => (
-                                        <div 
-                                            key={i} 
-                                            className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20"
-                                            data-testid={`project-idea-card-${i}`}
-                                        >
-                                            <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">{idea.title}</h3>
-                                            <p className="text-sm text-text-secondary line-clamp-3 mb-4">{idea.description}</p>
-                                            <div className="flex items-center gap-2">
-                                                <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
-                                                <span className="text-[10px] text-text-secondary font-mono">{idea.unique_angle}</span>
+                            )}
+
+                            {/* Scripting / Output Stage View */}
+                            {(currentStage === 'script' || currentStage === 'edit' || currentStage === 'output') && displayContent && (
+                                <div className="space-y-8 animate-in fade-in duration-700">
+                                     <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Sparkles className="w-5 h-5 text-accent" />
+                                            <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">AI Scripting</h2>
+                                        </div>
+                                        {status === 'running' && (
+                                            <div className="flex items-center gap-2 text-[10px] font-mono text-accent uppercase tracking-tighter">
+                                                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
+                                                Streaming Output
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {currentStage === 'output' ? (
+                                        <OutputEditor 
+                                            content={displayContent}
+                                            hooks={[]}
+                                            strategy={''}
+                                        />
+                                    ) : (
+                                        <div className="relative p-8 bg-surface/50 border border-white/5 rounded-[2rem] shadow-2xl">
+                                            <div className="prose prose-invert prose-lg max-w-none">
+                                                <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-text-primary/90">
+                                                    {displayContent}
+                                                    {status === 'running' && <span className="inline-block w-2 h-6 bg-accent ml-1 animate-pulse" />}
+                                                </pre>
                                             </div>
                                         </div>
-                                    ))}
+                                    )}
+
+                                    {status !== 'running' && (
+                                        <div className="space-y-4">
+                                            <HookTester
+                                                scriptText={displayContent}
+                                                niche={currentProject?.niche || ''}
+                                                platform={platform}
+                                                onApplyRewrite={(text) => setInstruction(text)}
+                                            />
+                                            <ThumbnailBrief 
+                                                scriptText={displayContent}
+                                                hookText=""
+                                                topic={currentProject?.topic || ''}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                    )}
-
-                    {/* Scripting Stage View (Streaming) */}
-                    {(currentStage === 'script' || currentStage === 'edit') && (
-                        <div className="max-w-4xl mx-auto space-y-8">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Sparkles className="w-5 h-5 text-accent" />
-                                    <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">AI Scripting</h2>
-                                </div>
-                                {status === 'running' && (
-                                    <div className="flex items-center gap-2 text-[10px] font-mono text-accent uppercase tracking-tighter">
-                                        <div className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
-                                        Streaming Output
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="relative p-12 bg-surface/50 border border-white/5 rounded-[2rem] min-h-[600px] shadow-2xl">
-                                <div className="prose prose-invert prose-lg max-w-none">
-                                    <pre 
-                                        className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-text-primary/90"
-                                        data-testid="project-script-content"
-                                    >
-                                        {displayContent}
-                                        {status === 'running' && <span className="inline-block w-2 h-6 bg-accent ml-1 animate-pulse" />}
-                                    </pre>
-                                </div>
-                                
-                                {!displayContent && status !== 'running' && (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-text-secondary/20">
-                                        <Zap className="w-12 h-12 mb-4" />
-                                        <p className="font-display italic">Awaiting instructions...</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Output Stage View */}
-                    {currentStage === 'output' && (
-                        <OutputEditor 
-                            content={displayContent}
-                            hooks={['"Why everything you know about AI is wrong..."', '"Stop scrolling. This script just saved me 10 hours."', '"The hidden truth behind CreatorIQ..."']}
-                            strategy="Targeting tech-savvy creators who want to automate their workflow without losing their unique voice."
-                        />
-                    )}
-                </div>
+                    </div>
+                )}
             </main>
 
             {/* Instruction Bar (Fixed Bottom) */}
@@ -300,6 +405,21 @@ export default function Project() {
                     </div>
                 </div>
             </div>
+
+            {/* Version History Panel */}
+            {id && (
+                <VersionHistory 
+                    projectId={id} 
+                    isOpen={historyOpen} 
+                    onClose={() => setHistoryOpen(false)} 
+                />
+            )}
+
+            {/* Pricing Modal */}
+            <PricingModal 
+                isOpen={pricingOpen} 
+                onClose={() => setPricingOpen(false)} 
+            />
         </div>
     );
 }
@@ -367,4 +487,3 @@ function InlineEditTitle({ initialTitle, onSave }: { initialTitle: string, onSav
         </h1>
     );
 }
-

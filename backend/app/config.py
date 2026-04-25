@@ -3,8 +3,6 @@ CreatorIQ Backend Configuration
 
 Centralized configuration management using Pydantic Settings.
 Loads from environment variables and .env file.
-
-V4 redesign: Removed Redis/ARQ/FAISS, added Qdrant + preference learning.
 """
 
 from functools import lru_cache
@@ -150,8 +148,9 @@ class Settings(BaseSettings):
     llm_model: Optional[str] = Field(default=None, description="Global LLM model override (e.g. llama-3.3-70b)")
     stt_provider: str = Field(default="groq", description="Default Speech-to-Text provider")
 
-    # ─── Search Provider ─────────────────────────────────────────
+    # ─── Search Providers ────────────────────────────────────────
     tavily_api_key: str = Field(default="", description="Tavily search API key")
+    youtube_api_key: str = Field(default="", description="YouTube Data API v3 key")
 
     # ─── Vector Store — Qdrant ───────────────────────────────────
     qdrant_url: str = Field(
@@ -324,6 +323,15 @@ class Settings(BaseSettings):
     cb_threshold_premium: int = Field(default=7, description="Failure threshold for premium models")
     cb_threshold_default: int = Field(default=5, description="Default failure threshold")
     cb_cooldown_default: int = Field(default=60, description="Default cooldown period in seconds")
+
+    # ─── Razorpay Payment Gateway ────────────────────────────────
+    razorpay_key_id: str = Field(default="", description="Razorpay Key ID")
+    razorpay_key_secret: str = Field(default="", description="Razorpay Key Secret")
+    razorpay_webhook_secret: str = Field(default="", description="Razorpay Webhook Secret")
+
+    # ─── Credits & Pricing ───────────────────────────────────────
+    credits_per_pipeline_run: int = Field(default=10, description="Credits consumed per pipeline execution")
+    credits_signup_bonus: int = Field(default=50, description="Free credits given to new users")
 
 @lru_cache()
 def get_settings() -> Settings:

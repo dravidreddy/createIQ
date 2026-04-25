@@ -68,20 +68,24 @@ class UserService:
         Create creator profile in the `user_profiles` collection.
         Also writes to the legacy embedded field for backward compat.
 
-        Raises:
-            ValueError: If a profile already exists.
+        If a profile already exists, returns it instead of raising an error
+        so the user is never blocked from proceeding.
         """
         user = await self.get_user(user_id)
         if not user:
             raise ValueError("User not found")
 
-        existing = await UserProfile.find_one(UserProfile.user_id == user_id)
+        oid = PydanticObjectId(user_id)
+
+        # Check for existing profile (use PydanticObjectId for correct type match)
+        existing = await UserProfile.find_one(UserProfile.user_id == oid)
         if existing:
-            raise ValueError("Profile already exists")
+            logger.info("Profile already exists for user %s — returning existing", user_id)
+            return self._embed_from_standalone(existing)
 
         # Create standalone profile document
         standalone = UserProfile(
-            user_id=PydanticObjectId(user_id),
+            user_id=oid,
             content_niche=profile_data.content_niche.value,
             custom_niche=profile_data.custom_niche,
             primary_platforms=[p.value for p in profile_data.primary_platforms],
@@ -97,10 +101,32 @@ class UserService:
             default_cta=profile_data.default_cta,
             pacing_style=profile_data.pacing_style,
         )
-        await standalone.insert()
 
-        # Build legacy embed for backward compat response
-        embed = ProfileEmbed(
+        try:
+            await standalone.insert()
+        except Exception as e:
+            # Handle race condition: another request may have inserted between check & insert
+            if "duplicate key" in str(e).lower() or "E11000" in str(e):
+                logger.warning("Profile duplicate key for user %s — returning existing", user_id)
+                existing = await UserProfile.find_one(UserProfile.user_id == oid)
+                if existing:
+                    return self._embed_from_standalone(existing)
+            raise
+
+        embed = self._embed_from_standalone(standalone)
+
+        # Also store in legacy embedded field
+        user.profile = embed.model_dump()
+        user.updated_at = get_now()
+        await user.save()
+
+        logger.info("Created profile for user %s", user_id)
+        return embed
+
+    @staticmethod
+    def _embed_from_standalone(standalone: UserProfile) -> ProfileEmbed:
+        """Build a ProfileEmbed from a standalone UserProfile document."""
+        return ProfileEmbed(
             content_niche=standalone.content_niche,
             custom_niche=standalone.custom_niche,
             primary_platforms=standalone.primary_platforms,
@@ -115,38 +141,15 @@ class UserService:
             hook_framework=standalone.hook_framework,
             default_cta=standalone.default_cta,
             pacing_style=standalone.pacing_style,
+            created_at=standalone.created_at,
+            updated_at=standalone.updated_at,
         )
-
-        # Also store in legacy embedded field
-        user.profile = embed.model_dump()
-        user.updated_at = get_now()
-        await user.save()
-
-        logger.info("Created profile for user %s", user_id)
-        return embed
 
     async def get_profile(self, user_id: str) -> Optional[ProfileEmbed]:
         """Get profile — reads from standalone collection first, falls back to embedded."""
         standalone = await UserProfile.find_one(UserProfile.user_id == PydanticObjectId(user_id))
         if standalone:
-            return ProfileEmbed(
-                content_niche=standalone.content_niche,
-                custom_niche=standalone.custom_niche,
-                primary_platforms=standalone.primary_platforms,
-                content_style=standalone.content_style,
-                target_audience=standalone.target_audience,
-                typical_video_length=standalone.typical_video_length,
-                preferred_language=standalone.preferred_language,
-                additional_context=standalone.additional_context,
-                vocabulary=standalone.vocabulary,
-                avoid_words=standalone.avoid_words,
-                formality_level=standalone.formality_level,
-                hook_framework=standalone.hook_framework,
-                default_cta=standalone.default_cta,
-                pacing_style=standalone.pacing_style,
-                created_at=standalone.created_at,
-                updated_at=standalone.updated_at,
-            )
+            return self._embed_from_standalone(standalone)
 
         # Fallback: try legacy embedded profile
         user = await self.get_user(user_id)

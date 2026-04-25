@@ -134,7 +134,7 @@ export default function Series() {
                                         </h3>
                                         <div className="flex items-center gap-3 text-xs text-text-secondary mt-1">
                                             <span className="font-mono uppercase">{video.status}</span>
-                                            <span className="w-1 h-1 rounded-full bg-white/20" />
+                                            <span className="w-1 h-1 rounded-full bg-white/50" />
                                             <span>{new Date(video.created_at).toLocaleDateString()}</span>
                                         </div>
                                     </div>

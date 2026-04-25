@@ -82,6 +82,8 @@ async def init_db() -> None:
     from app.models.pipeline_checkpoint import PipelineCheckpoint
     # NAPOS
     from app.models.niche_config import NicheConfigModel
+    # Billing
+    from app.models.transaction import Transaction
 
     await init_beanie(
         database=db,
@@ -113,6 +115,8 @@ async def init_db() -> None:
             PipelineCheckpoint,
             # ─── NAPOS ──────────────────────────────────
             NicheConfigModel,
+            # ─── Billing ─────────────────────────────────
+            Transaction,
             # ─── Legacy (deprecated) ────────────────────
             ProjectArtifact,
             AgentSession,

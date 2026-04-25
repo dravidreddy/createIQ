@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard'
 import Series from './pages/Series'
 import Project from './pages/Project'
 import Settings from './pages/Settings'
+import CompetitorAnalysis from './pages/CompetitorAnalysis'
 
 // Layout
 import Layout from './components/layout/Layout'
@@ -30,6 +31,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     // Redirect to profile setup if user hasn't set up profile
     if (user && !user.has_profile) {
         return <Navigate to="/profile-setup" replace />
+    }
+
+    return <>{children}</>
+}
+
+// Profile setup route: requires auth but does NOT check has_profile (avoids circular redirect)
+function ProfileSetupRoute({ children }: { children: React.ReactNode }) {
+    const { isAuthenticated } = useAuthStore()
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />
     }
 
     return <>{children}</>
@@ -64,10 +76,7 @@ function App() {
     // Check session health and config on mount
     useEffect(() => {
         const authState = useAuthStore.getState()
-        // Don't re-validate session during profile setup — the user just signed up
-        // and the cookies are fresh. Re-validating here causes a race condition.
-        const isProfileSetup = window.location.pathname === '/profile-setup'
-        if (authState.isAuthenticated && !isProfileSetup) {
+        if (authState.isAuthenticated) {
             authState.checkAuth()
         }
         
@@ -98,9 +107,11 @@ function App() {
                     </AuthRoute>
                 } />
 
-                {/* Profile setup (after signup) */}
+                {/* Profile setup (after signup — requires auth, but no profile check) */}
                 <Route path="/profile-setup" element={
-                    <ProfileSetup />
+                    <ProfileSetupRoute>
+                        <ProfileSetup />
+                    </ProfileSetupRoute>
                 } />
 
                 {/* Protected routes with layout */}
@@ -123,6 +134,11 @@ function App() {
                     <Route path="/settings" element={
                         <ProtectedRoute>
                             <Settings />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/tools/competitor" element={
+                        <ProtectedRoute>
+                            <CompetitorAnalysis />
                         </ProtectedRoute>
                     } />
                 </Route>

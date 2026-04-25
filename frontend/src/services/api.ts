@@ -30,6 +30,22 @@ const api = axios.create({
 // Single-Flight Refresh tracking to prevent concurrent refresh calls
 let refreshPromise: Promise<any> | null = null;
 
+// Add request interceptor to inject workspace context
+api.interceptors.request.use((config) => {
+    const workspaceStorage = localStorage.getItem('workspace-storage');
+    if (workspaceStorage) {
+        try {
+            const parsed = JSON.parse(workspaceStorage);
+            if (parsed.state?.activeWorkspaceId) {
+                config.headers['x-workspace-id'] = parsed.state.activeWorkspaceId;
+            }
+        } catch (e) {
+            // ignore parse error
+        }
+    }
+    return config;
+});
+
 // Add response interceptor for token refresh and standardized response unwrapping
 api.interceptors.response.use(
     (response) => {
@@ -201,7 +217,8 @@ export const pipelineApi = {
         projectId: string, 
         topic: string, 
         onEvent: (event: any) => void,
-        onError?: (err: any) => void
+        onError?: (err: any) => void,
+        options: Record<string, any> = {}
     ) => {
         const ctrl = new AbortController();
         
@@ -218,9 +235,10 @@ export const pipelineApi = {
             body: JSON.stringify({
                 project_id: projectId,
                 topic: topic,
-                niche: 'general',
-                platforms: ['YouTube'],
-                execution_mode: 'auto'
+                niche: options.niche || 'general',
+                platforms: options.platforms || ['YouTube'],
+                execution_mode: options.execution_mode || 'auto',
+                ...options
             }),
             signal: ctrl.signal,
             async onopen(response) {
@@ -258,6 +276,11 @@ export const pipelineApi = {
             stage,
             edited_content: data
         })
+        return response.data
+    },
+
+    stop: async (threadId: string) => {
+        const response = await api.post(`/pipeline/${threadId}/stop`)
         return response.data
     }
 }
@@ -303,6 +326,113 @@ export const configApi = {
         const response = await api.get('/pipeline/config')
         return response.data
     }
+}
+
+// ── Batch 1 Feature APIs ────────────────────────────────────────
+
+// Version History API
+export const historyApi = {
+    getHistory: async (projectId: string): Promise<any[]> => {
+        const response = await api.get(`/projects/${projectId}/history`)
+        return response.data
+    },
+
+    getVersion: async (projectId: string, versionId: string): Promise<any> => {
+        const response = await api.get(`/projects/${projectId}/history/${versionId}`)
+        return response.data
+    },
+
+    compare: async (projectId: string, v1: string, v2: string): Promise<any> => {
+        const response = await api.get(`/projects/${projectId}/history/compare`, {
+            params: { v1, v2 }
+        })
+        return response.data
+    },
+
+    restore: async (projectId: string, versionId: string): Promise<any> => {
+        const response = await api.post(`/projects/${projectId}/history/${versionId}/restore`)
+        return response.data
+    },
+}
+
+// Voice Profile API
+export const voiceApi = {
+    analyze: async (scripts: string[]): Promise<any> => {
+        const response = await api.post('/voice/analyze', { scripts })
+        return response.data
+    },
+
+    getProfile: async (): Promise<any> => {
+        const response = await api.get('/voice/profile')
+        return response.data
+    },
+
+    resetProfile: async (): Promise<any> => {
+        const response = await api.delete('/voice/profile')
+        return response.data
+    },
+}
+
+// AI Tools API
+export const toolsApi = {
+    testHook: async (scriptText: string, niche?: string, platform?: string): Promise<any> => {
+        const response = await api.post('/tools/hook-test', {
+            script_text: scriptText,
+            niche: niche || '',
+            platform: platform || '',
+        })
+        return response.data
+    },
+
+    generateThumbnailBrief: async (scriptText: string, hookText?: string, topic?: string): Promise<any> => {
+        const response = await api.post('/tools/thumbnail-brief', {
+            script_text: scriptText,
+            hook_text: hookText || '',
+            topic: topic || '',
+        })
+        return response.data
+    },
+
+    analyzeCompetitor: async (url: string): Promise<any> => {
+        const response = await api.post('/tools/competitor-analysis', { url })
+        return response.data
+    },
+}
+
+// Workspace API
+export const workspaceApi = {
+    list: async (): Promise<any[]> => {
+        const response = await api.get('/workspaces')
+        return response.data
+    },
+
+    invite: async (workspaceId: string, email: string, role: string): Promise<any> => {
+        const response = await api.post(`/workspaces/${workspaceId}/invite`, { email, role })
+        return response.data
+    },
+}
+
+// Billing & Monetization API
+export const billingApi = {
+    getPackages: async () => {
+        const response = await api.get('/billing/packages')
+        return response.data
+    },
+
+    createOrder: async (packageId: string) => {
+        const response = await api.post('/billing/create-order', { package_id: packageId })
+        return response.data
+    },
+
+    verifyPayment: async (data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+        const response = await api.post('/billing/verify-payment', data)
+        return response.data
+    },
+
+    getHistory: async () => {
+        const response = await api.get('/billing/history')
+        return response.data
+    },
 }
 
 export default api

@@ -1,8 +1,7 @@
 """
 CreateIQ Backend - FastAPI Application Entry Point
 
-V4 redesign: LangGraph pipeline replaces ARQ worker.
-Qdrant vector store replaces FAISS.
+Multi-agent LangGraph pipeline with Qdrant vector store.
 """
 
 from contextlib import asynccontextmanager
@@ -194,6 +193,43 @@ def create_app() -> FastAPI:
         stt_routes.router,
         prefix=f"{settings.api_v1_prefix}/stt",
         tags=["Speech-to-Text"],
+    )
+
+    # ─── Batch 1 Feature Routes ──────────────────────────────────
+    from app.api.routes import history as history_routes
+    from app.api.routes import voice as voice_routes
+    from app.api.routes import tools as tools_routes
+
+    app.include_router(
+        history_routes.router,
+        prefix=f"{settings.api_v1_prefix}/projects",
+        tags=["Version History"],
+    )
+    app.include_router(
+        voice_routes.router,
+        prefix=f"{settings.api_v1_prefix}/voice",
+        tags=["Voice Profile"],
+    )
+    app.include_router(
+        tools_routes.router,
+        prefix=f"{settings.api_v1_prefix}/tools",
+        tags=["AI Tools"],
+    )
+
+    # ─── Billing & Monetization ──────────────────────────────────
+    from app.billing.routes import router as billing_router
+    app.include_router(
+        billing_router,
+        prefix=f"{settings.api_v1_prefix}/billing",
+        tags=["Billing"],
+    )
+
+    # ─── Workspaces ──────────────────────────────────────────────
+    from app.api.routes import workspaces as workspaces_routes
+    app.include_router(
+        workspaces_routes.router,
+        prefix=f"{settings.api_v1_prefix}/workspaces",
+        tags=["Workspaces"],
     )
 
     @app.get("/health")

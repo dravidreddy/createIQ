@@ -154,3 +154,47 @@ async def verify_csrf(request: Request):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="CSRF Protection: Missing mandatory custom header."
         )
+
+
+async def get_current_workspace(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Enforce workspace isolation and RBAC.
+    
+    Requires x-workspace-id header. Verifies user belongs to the workspace.
+    """
+    from app.models.workspace import Workspace
+    
+    workspace_id = request.headers.get("x-workspace-id")
+    
+    if not workspace_id:
+        # Temporary Fallback: Just return their personal workspace
+        ws = await Workspace.find_one({"owner_id": str(current_user.id)})
+        if not ws:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No x-workspace-id provided and no personal workspace found."
+            )
+        return ws
+        
+    try:
+        workspace = await Workspace.get(PydanticObjectId(workspace_id))
+    except Exception:
+        workspace = None
+        
+    if not workspace:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workspace not found"
+        )
+        
+    # Verify membership
+    is_member = any(member.user_id == str(current_user.id) for member in workspace.members)
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this workspace."
+        )
+        
+    return workspace

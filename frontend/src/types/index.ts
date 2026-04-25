@@ -7,6 +7,7 @@ export interface User {
     is_verified: boolean
     created_at: string
     has_profile: boolean
+    credits: number
 }
 
 export interface Profile {
@@ -175,6 +176,7 @@ export interface EditingSuggestions {
 }
 
 // Agent stream event types (Canonical V4 Schema)
+// Agent stream event types (Canonical V4 Schema)
 export type PipelineEventType = 
     | 'token' 
     | 'agent_start' 
@@ -191,6 +193,8 @@ export type PipelineEventType =
     | 'node_complete'
     | 'metrics'
     | 'thread_created'
+    | 'thinking'
+    | 'progress'
     | 'done';
 
 export interface StreamEvent {

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import clsx from 'clsx'
+import WorkspaceSelector from './WorkspaceSelector'
 
 export default function Layout() {
     const { user, logout } = useAuthStore()
@@ -36,6 +37,7 @@ export default function Layout() {
 
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: Home },
+        { path: '/tools/competitor', label: 'Tools', icon: Sparkles },
         { path: '/settings', label: 'Settings', icon: Settings },
     ]
 
@@ -85,6 +87,8 @@ export default function Layout() {
                             
                             <div className="h-4 w-[1px] bg-white/10 mx-2" />
 
+                            <WorkspaceSelector />
+                            
                             {/* User menu */}
                             <div className="relative" ref={menuRef}>
                                 <button

@@ -28,23 +28,29 @@ export const PipelineFlow: React.FC<PipelineFlowProps> = ({ currentStage, comple
         return (
           <div key={stage.id} className="flex items-center gap-4 group">
             <div className="flex flex-col items-center gap-2">
-              <div
-                className={clsx(
-                  'w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500',
-                  isActive 
-                    ? 'border-accent bg-accent/10 shadow-glow' 
-                    : isCompleted || isPast
-                      ? 'border-accent bg-accent text-white'
-                      : 'border-white/10 bg-transparent text-text-secondary'
+              <div className="relative">
+                {/* Glowing Aura for Active Stage */}
+                {isActive && (
+                  <div className="absolute inset-0 bg-accent rounded-full blur-md opacity-40 animate-pulse" />
                 )}
-              >
-                {isCompleted || isPast ? (
-                  <Check className="w-4 h-4 animate-in zoom-in" />
-                ) : isActive ? (
-                  <Dot className="w-6 h-6 animate-pulse" />
-                ) : (
-                  <span className="text-xs font-mono">{index + 1}</span>
-                )}
+                <div
+                  className={clsx(
+                    'relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500',
+                    isActive 
+                      ? 'border-accent bg-accent/20 shadow-glow text-accent' 
+                      : isCompleted || isPast
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-white/10 bg-transparent text-text-secondary'
+                  )}
+                >
+                  {isCompleted || isPast ? (
+                    <Check className="w-4 h-4 animate-in zoom-in" />
+                  ) : isActive ? (
+                    <Dot className="w-6 h-6 animate-pulse" />
+                  ) : (
+                    <span className="text-xs font-mono">{index + 1}</span>
+                  )}
+                </div>
               </div>
               <span
                 className={clsx(

@@ -13,6 +13,7 @@ from typing import Any, Dict
 from app.agents.base_executor import BaseAgentExecutor, Priority
 from app.llm.base import LLMMessage
 from app.tools.search import get_tavily_tool
+from app.tools.youtube import get_youtube_tool
 from app.utils.json_parser import parse_llm_json
 from app.utils.prompt_loader import load_system_prompt, load_user_prompt
 from app.utils.context_pruner import ContextPruner
@@ -44,19 +45,26 @@ class TrendResearcherAgent(BaseAgentExecutor):
 
         self.log("info", f"Researching trends for: {topic} in {niche}")
 
-        # 1. Perform 4 targeted web searches in parallel
+        # 1. Perform targeted web searches in parallel
         search_tool = get_tavily_tool()
+        youtube_tool = get_youtube_tool()
+        
         queries = [
             f"trending {niche} content ideas {datetime.now().year} {topic}",
             f"{topic} viral content trends {' '.join(platforms)}",
             f"latest {niche} news {topic}",
-            f"{topic} audience engagement trends",
         ]
 
-        self.log("tool_call", f"web_search: {len(queries)} queries in parallel")
-        results_list = await asyncio.gather(*[
-            search_tool.search(query, max_results=5) for query in queries
-        ], return_exceptions=True)
+        self.log("tool_call", f"web_search: {len(queries)} queries + 1 YouTube query in parallel")
+        
+        tasks = [search_tool.search(query, max_results=5) for query in queries]
+        
+        # Add YouTube search if platform is YouTube or not specified
+        if "YouTube" in platforms or not platforms:
+            yt_query = f"{topic} {niche} trending"
+            tasks.append(youtube_tool.search_trends(yt_query, max_results=5, order="viewCount"))
+
+        results_list = await asyncio.gather(*tasks, return_exceptions=True)
 
         all_results = []
         all_sources = []

@@ -53,7 +53,7 @@
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-white/20;
+    @apply bg-white/50;
   }
 }
 
@@ -122,3 +122,59 @@
   }
 }
 
+/* Python HtmlDiff Custom Styling */
+.diff-viewer {
+  @apply w-full overflow-x-auto text-sm font-mono rounded-xl;
+  scrollbar-width: thin;
+}
+
+.diff-viewer table.diff {
+  @apply w-full border-collapse bg-surface border border-white/5 shadow-2xl;
+  table-layout: fixed;
+}
+
+.diff-viewer td {
+  @apply px-4 py-2 align-top break-words border-b border-white/5;
+}
+
+.diff-viewer td[nowrap] {
+  white-space: pre-wrap !important;
+  word-break: break-word;
+}
+
+.diff-viewer td.diff_header {
+  @apply bg-white/5 text-text-secondary/50 text-right w-12 select-none border-r border-white/5 font-semibold text-xs;
+}
+
+.diff-viewer td.diff_next {
+  @apply hidden; /* Hide the next/prev arrows difflib injects */
+}
+
+/* Additions (Green) */
+.diff-viewer span.diff_add {
+  @apply bg-green-500/20 text-green-300 rounded px-1 font-semibold;
+}
+
+/* Deletions (Red) */
+.diff-viewer span.diff_sub {
+  @apply bg-red-500/20 text-red-300 line-through rounded px-1 opacity-80;
+}
+
+/* Changes (Yellow) */
+.diff-viewer span.diff_chg {
+  @apply bg-yellow-500/20 text-yellow-300 rounded px-1;
+}
+
+/* Column Sizing */
+.diff-viewer tr td:nth-child(3) {
+  @apply border-r border-white/5;
+  width: calc(50% - 24px); /* Account for diff_header width */
+}
+
+.diff-viewer tr td:nth-child(6) {
+  width: calc(50% - 24px);
+}
+
+.diff-viewer tbody tr:hover td {
+  @apply bg-white/5 transition-colors;
+}

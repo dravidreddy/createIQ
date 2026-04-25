@@ -2,7 +2,7 @@
 Memory Embedding Document — MongoDB / Beanie
 
 Stores text + vector embeddings for AI memory / retrieval-augmented generation.
-Designed to work with MongoDB Atlas Vector Search or external FAISS.
+Designed to work with MongoDB Atlas and Qdrant Vector Search.
 """
 
 from app.utils.datetime_utils import utc_now

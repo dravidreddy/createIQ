@@ -102,6 +102,11 @@ class PromptOrchestrator:
         if user_layer:
             layers_used.append("user")
 
+        # Layer 3.5: Voice Profile Layer (extracted creator DNA)
+        voice_layer = self._get_voice_layer(project_context.get("style_overrides", {}))
+        if voice_layer:
+            layers_used.append("voice")
+
         # Layer 4: Task Layer (existing YAML template — the original prompt)
         task_layer = self._get_task_layer(
             agent_name, project_context, user_preferences, prompt_version
@@ -122,6 +127,7 @@ class PromptOrchestrator:
             system_layer,
             niche_layer,
             user_layer,
+            voice_layer,
             task_layer,
             memory_layer,
         ]))
@@ -252,6 +258,40 @@ class PromptOrchestrator:
 
         parts.append("\nAdapt your output to match these preferences while maintaining content quality.")
 
+        return "\n".join(parts)
+
+    def _get_voice_layer(self, style_overrides: Dict[str, Any]) -> str:
+        """Layer 3.5: Creator Voice DNA.
+        
+        Forces the AI to adopt the creator's specific tone, formality, and signature phrases.
+        """
+        if not style_overrides:
+            return ""
+
+        parts = []
+        
+        tone = style_overrides.get("voice_tone")
+        formality = style_overrides.get("voice_formality")
+        engagement = style_overrides.get("voice_engagement")
+        signature_phrases = style_overrides.get("signature_phrases")
+        
+        if tone or formality or signature_phrases:
+            parts.append("## CREATOR VOICE DNA (STRICT ADHERENCE REQUIRED)")
+            parts.append("You MUST write exactly in this creator's unique voice:")
+            
+            if tone:
+                parts.append(f"- **Primary Tone**: {tone.replace('_', ' ').title()}")
+            if formality:
+                parts.append(f"- **Formality Level**: {formality.replace('_', ' ').title()}")
+            if engagement:
+                parts.append(f"- **Engagement Style**: {engagement.replace('_', ' ').title()}")
+                
+            if signature_phrases:
+                parts.append("\n### Signature Phrases (Mandatory)")
+                parts.append("Integrate 1-2 of these exact phrases naturally into the script:")
+                for phrase in signature_phrases.split(","):
+                    parts.append(f"- \"{phrase.strip()}\"")
+                    
         return "\n".join(parts)
 
     def _get_task_layer(

@@ -134,6 +134,17 @@ async def start_pipeline(
     current_user: User = Depends(get_current_user),
 ):
     """Start a new pipeline execution with isolated streaming channels."""
+    # ─── Credit Gate ────────────────────────────────────────────
+    credits_required = settings.credits_per_pipeline_run
+    if current_user.credits < credits_required:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Insufficient credits. You have {current_user.credits}, need {credits_required}. Please top up."
+        )
+    # Deduct credits upfront
+    await current_user.set({"credits": current_user.credits - credits_required})
+    logger.info(f"Deducted {credits_required} credits from user {current_user.id} (balance: {current_user.credits - credits_required})")
+
     request_id = http_request.headers.get("X-Request-ID", str(uuid4()))
     thread_id = f"{body.project_id}:{uuid4()}"
     initial_state = _build_initial_state(body, current_user, request_id, thread_id)
@@ -346,3 +357,38 @@ async def get_pipeline_schema(current_user: User = Depends(get_current_user)):
             {"id": "strategy", "name": "Strategy & SEO", "interrupt_node": "process_strategy_approval"},
         ]
     })
+
+
+@router.post("/{thread_id}/stop", response_model=CreatorResponse[dict])
+async def stop_pipeline(
+    thread_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Immediately stop a running pipeline execution."""
+    graph = get_graph()
+    config = {"configurable": {"thread_id": thread_id}}
+
+    state = await graph.aget_state(config)
+    if not state or not state.values:
+        raise HTTPException(status_code=404, detail="Pipeline thread not found")
+
+    # Set termination flag — budget_guard will skip all subsequent nodes
+    await graph.aupdate_state(config, {"should_terminate": True})
+
+    # Publish stream_end to kill the SSE connection immediately
+    try:
+        from app.pipeline.streaming import stream_end_event
+        r = get_redis()
+        # Find all matching channels for this thread and notify them
+        end_event = stream_end_event(thread_id, "stop", 999999, "cancelled")
+        # Broadcast to all request channels for this thread
+        keys = await r.keys(f"pipeline_stream:{thread_id}:*")
+        for key in keys:
+            channel = key if isinstance(key, str) else key.decode("utf-8")
+            await r.publish(channel, end_event)
+    except Exception as e:
+        logger.warning(f"Stop: Failed to publish stream_end: {e}")
+
+    logger.info(f"Pipeline stopped by user for thread {thread_id}")
+    return wrap_response({"status": "stopped", "thread_id": thread_id})
+

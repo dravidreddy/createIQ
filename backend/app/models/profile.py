@@ -64,6 +64,21 @@ class UserProfile(Document):
     pacing_style: Optional[str] = None
     preferences: dict = Field(default_factory=dict)
 
+    # Voice profile — learned from creator's uploaded scripts
+    voice_profile: Optional[dict] = Field(default=None)
+    # Structure: {
+    #   "tone": "casual_energetic",
+    #   "avg_sentence_length": 12,
+    #   "hook_style": "question_based",
+    #   "vocabulary_level": "simple",
+    #   "signature_phrases": ["here's the thing", "let me tell you"],
+    #   "pacing": "fast_start_slow_middle",
+    #   "formality": "informal",
+    #   "analyzed_at": "2026-04-17T..."
+    # }
+    voice_sample_count: int = Field(default=0)
+
+
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 

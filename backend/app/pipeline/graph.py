@@ -21,6 +21,7 @@ from app.agents.groups.script_writing import deep_research_node, script_drafting
 from app.agents.groups.structure import structure_analysis_node, pacing_optimization_node
 from app.agents.groups.editing import line_editing_node, engagement_boosting_node, final_review_node
 from app.agents.groups.strategy import series_planning_node, growth_advisory_node
+from app.agents.groups.thumbnail import thumbnail_brief_node
 
 # Tier 2 Utilities
 from app.agents.sub_agents.evaluator import EvaluatorAgent
@@ -149,6 +150,23 @@ async def load_memory_node(state: PipelineState) -> PipelineState:
                 style_overrides[style_key] = value
             if value and _is_generic_context_value(project_ctx.get(style_key)):
                 project_ctx[style_key] = value
+
+        # ── Voice Profile Injection ─────────────────────────────
+        # If the creator has analyzed their voice, inject it into
+        # style_overrides so all agents write in their unique voice.
+        if hasattr(user_profile_ctx, 'voice_profile') and user_profile_ctx.voice_profile:
+            voice = user_profile_ctx.voice_profile
+            style_overrides["voice_tone"] = voice.get("tone", "")
+            style_overrides["voice_formality"] = voice.get("formality", "")
+            style_overrides["voice_vocabulary"] = voice.get("vocabulary_level", "")
+            style_overrides["voice_pacing"] = voice.get("pacing", "")
+            style_overrides["voice_hook_style"] = voice.get("hook_style", "")
+            style_overrides["voice_engagement"] = voice.get("engagement_style", "")
+            phrases = voice.get("signature_phrases", [])
+            if phrases:
+                style_overrides["signature_phrases"] = ", ".join(phrases)
+            logger.info("load_memory: voice profile injected (tone=%s)", voice.get("tone"))
+
         project_ctx["style_overrides"] = style_overrides
 
     # NAPOS: Resolve niche via inference if not explicitly set
@@ -300,7 +318,7 @@ async def state_sentinel_node(state: PipelineState) -> PipelineState:
 
 
 async def save_results_node(state: PipelineState) -> PipelineState:
-    """Persist final outputs to project and user memory."""
+    """Persist final outputs to project and user memory, and create a version snapshot."""
     memory = MemoryService()
 
     try:
@@ -319,6 +337,67 @@ async def save_results_node(state: PipelineState) -> PipelineState:
             )
     except Exception as e:
         logger.warning("save_results: failed — %s", e)
+
+    # ── Auto-Version Snapshot ────────────────────────────────────
+    # Create an append-only ContentVersion so users can compare and restore.
+    try:
+        from app.models.content_block import ContentBlock, BlockType
+        from app.models.content_version import ContentVersion
+
+        project_id = state.get("project_id", "")
+        user_id = state.get("user_id", "")
+
+        if project_id and state.get("edited_script"):
+            # Find or create the script block for this project
+            block = await ContentBlock.find_one(
+                ContentBlock.project_id == project_id,
+                ContentBlock.type == BlockType.SCRIPT,
+            )
+            if not block:
+                block = ContentBlock(
+                    project_id=project_id,
+                    type=BlockType.SCRIPT,
+                    created_by=user_id,
+                )
+                await block.insert()
+
+            # Deactivate previous active versions
+            await ContentVersion.find(
+                ContentVersion.block_id == str(block.id),
+                ContentVersion.is_active == True,
+            ).update({"$set": {"is_active": False}})
+
+            # Get next version number
+            latest = await ContentVersion.find(
+                ContentVersion.block_id == str(block.id)
+            ).sort(-ContentVersion.version_number).first_or_none()
+
+            next_num = (latest.version_number + 1) if latest else 1
+
+            version = ContentVersion(
+                block_id=str(block.id),
+                version_number=next_num,
+                content={
+                    "script": state.get("edited_script"),
+                    "hook": state.get("selected_hook"),
+                    "ideas": state.get("ideas"),
+                    "structure": state.get("structure_guidance"),
+                },
+                created_by=user_id,
+                is_active=True,
+            )
+            await version.insert()
+
+            # Update block pointer
+            block.current_version_id = str(version.id)
+            await block.save()
+
+            logger.info(
+                "save_results: created version V%d for project %s",
+                next_num, project_id,
+            )
+    except Exception as e:
+        logger.warning("save_results: version snapshot failed (non-fatal) — %s", e)
 
     return {
         **state,
@@ -512,26 +591,32 @@ def should_interrupt(state: PipelineState, stage_name: str) -> bool:
     
     Rules:
     1. Manual Mode: Always interrupt at every stage.
-    2. Guided Mode: Interrupt only at 'idea_selection' and 'final_review'.
+    2. Guided Mode: Interrupt at 'idea_selection' and 'final_review' by default.
+       Only skip if the evaluator explicitly set high confidence (> 0.85).
     3. Auto Mode: Never interrupt unless confidence is dangerously low (< 0.4).
-    4. Confidence: If stage confidence > 0.85, skip interrupt in Guided/Auto.
     """
     mode = state.get("execution_mode", "auto")
-    confidence = state.get("node_confidence", {}).get(stage_name, 1.0)
+    node_confidence = state.get("node_confidence", {})
+    confidence = node_confidence.get(stage_name)  # None if not explicitly set
     
     if mode == "manual":
         return True
     
-    if confidence < 0.4:
+    # Low confidence override: always interrupt regardless of mode
+    if confidence is not None and confidence < 0.4:
         return True
     
     if mode == "guided":
-        return stage_name in ["idea_selection", "final_review"] and confidence < 0.85
-    
-    if mode == "auto":
+        # Interrupt at key checkpoints unless evaluator explicitly gave high confidence
+        if stage_name in ("idea_selection", "final_review"):
+            # Only skip if confidence was EXPLICITLY set high by the evaluator
+            if confidence is not None and confidence > 0.85:
+                return False
+            return True
         return False
-        
-    return True
+    
+    # Auto mode: never interrupt (low-confidence override handled above)
+    return False
 
 
 async def auto_approve_node(state: PipelineState) -> PipelineState:
@@ -831,6 +916,7 @@ def build_graph() -> StateGraph:
     graph.add_node("load_memory", budget_guard(load_memory_node))
     graph.add_node("validate_inputs", budget_guard(validate_inputs_node))
     graph.add_node("save_results", budget_guard(save_results_node))
+    graph.add_node("thumbnail_brief", budget_guard(thumbnail_brief_node))
     graph.add_node("error_handler", budget_guard(error_handler_node))
     graph.add_node("detect_edits", budget_guard(detect_edits_node))
     graph.add_node("state_sentinel", budget_guard(state_sentinel_node))
@@ -880,9 +966,6 @@ def build_graph() -> StateGraph:
     graph.add_edge("load_memory", "validate_inputs")
     graph.add_conditional_edges("validate_inputs", route_after_validation)
     
-    # Final check before saving
-    graph.add_edge("save_results", END) # This is already there further down, I'll move sentinel before it
-    
     # Tier 2 evaluation router (shared)
     graph.add_conditional_edges("evaluate", route_after_evaluation)
     
@@ -927,7 +1010,8 @@ def build_graph() -> StateGraph:
     graph.add_edge("growth_advisory", "state_sentinel")
     graph.add_edge("state_sentinel", "save_results")
     
-    graph.add_edge("save_results", END)
+    graph.add_edge("save_results", "thumbnail_brief")
+    graph.add_edge("thumbnail_brief", END)
     graph.add_conditional_edges("error_handler", route_error)
 
     return graph

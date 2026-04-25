@@ -103,7 +103,7 @@ export const OutputEditor: React.FC<OutputEditorProps> = ({
             </div>
             <ul className="space-y-3">
               {hooks.map((hook, i) => (
-                <li key={i} className="text-sm text-text-secondary p-3 bg-white/2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
+                <li key={i} className="text-sm text-text-secondary p-3 bg-white/5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
                   <span className="text-accent/40 mr-2 font-mono">{i + 1}.</span>
                   {hook}
                 </li>

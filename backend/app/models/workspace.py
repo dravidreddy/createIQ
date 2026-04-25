@@ -7,10 +7,17 @@ Projects live inside workspaces.
 
 from app.utils.datetime_utils import utc_now
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
 
 from beanie import Document, Indexed
 from pydantic import BaseModel, Field
+
+
+class WorkspaceTier(str, Enum):
+    FREE = "free"
+    PRO = "pro"
+    AGENCY = "agency"
 
 
 class WorkspaceMember(BaseModel):
@@ -28,6 +35,14 @@ class Workspace(Document):
     owner_id: Indexed(str)  # type: ignore[valid-type]
 
     members: List[WorkspaceMember] = []
+
+    # Billing & Tier
+    tier: WorkspaceTier = WorkspaceTier.FREE
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+
+    # Shared Agency Data (e.g. voice_profile dict)
+    settings: dict = Field(default_factory=dict)
 
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)

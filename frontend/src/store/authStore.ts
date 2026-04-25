@@ -23,7 +23,8 @@ interface AuthState {
     loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
-    updateUser: (user: Partial<User>) => void
+    updateUser: (userData: Partial<User>) => void
+    refreshUser: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -135,6 +136,15 @@ export const useAuthStore = create<AuthState>()(
                 const currentUser = get().user
                 if (currentUser) {
                     set({ user: { ...currentUser, ...userData } })
+                }
+            },
+
+            refreshUser: async () => {
+                try {
+                    const user = await authApi.getMe()
+                    set({ user, isAuthenticated: true })
+                } catch (error) {
+                    console.error('Failed to refresh user:', error)
                 }
             }
         }),
