@@ -145,4 +145,4 @@ tenacity>=8.2.3
 firebase-admin>=6.5.0
 youtube-transcript-api==1.2.4
 
-razorpay==1.5.0
+razorpay==2.0.1
