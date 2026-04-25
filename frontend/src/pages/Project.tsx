@@ -14,7 +14,8 @@ import {
   Zap,
   Play,
   Square,
-  Coins
+  Coins,
+  MessageSquare
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PipelineFlow, PipelineStage } from '../components/pipeline/PipelineFlow';
@@ -54,6 +55,7 @@ export default function Project() {
     const contentRef = useRef('');
     const [historyOpen, setHistoryOpen] = useState(false);
     const [pricingOpen, setPricingOpen] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const { user } = useAuthStore();
 
     useEffect(() => {
@@ -210,10 +212,10 @@ export default function Project() {
     };
 
     const ideasToRender = status === 'interrupted' && interruptContext?.stage === 'idea_selection' ? interruptContext.data : currentProject.discovered_ideas;
-    const hasResearchContent = currentStage === 'research' && ideasToRender && ideasToRender.length > 0;
-    const hasHookContent = currentStage === 'hook' && status === 'interrupted' && interruptContext?.stage === 'hook_selection' && interruptContext.data;
-    const hasScriptContent = (currentStage === 'script' || currentStage === 'edit' || currentStage === 'output') && displayContent;
-    const hasRightColumnContent = hasResearchContent || hasHookContent || hasScriptContent;
+    
+    // Context-Aware Layout Modes
+    const isDiscoveryMode = currentStage === 'research' || currentStage === 'hook';
+    const isFocusMode = currentStage === 'script' || currentStage === 'edit' || currentStage === 'output';
 
     return (
         <div className="min-h-screen bg-bg flex flex-col pt-16 pb-32">
@@ -275,8 +277,14 @@ export default function Project() {
             </header>
 
             {/* Core Pipeline Navigation */}
-            <div className="sticky top-16 bg-bg/50 backdrop-blur-sm border-b border-white/5 z-40">
+            <div className="sticky top-16 bg-bg/50 backdrop-blur-xl border-b border-white/5 z-40">
                 <PipelineFlow currentStage={currentStage} completedStages={completedStages} />
+                
+                {/* Persistent North Star Banner */}
+                <div className="bg-gradient-to-r from-transparent via-white/[0.02] to-transparent border-t border-white/[0.02] px-6 py-2 flex items-center justify-center">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-text-secondary/70 mr-3">Target Prompt</span>
+                    <span className="text-sm font-medium text-white/90">"{currentProject.topic || 'Untitled Concept'}"</span>
+                </div>
             </div>
 
             {/* Main Workspace */}
@@ -304,106 +312,135 @@ export default function Project() {
                         </button>
                     </div>
                 ) : (
-                    /* Split View Layout */
-                    <div className="lg:flex lg:gap-8 animate-in slide-up h-[calc(100vh-16rem)]">
-                        {/* Left Column: Chat Timeline */}
-                        <div className={`w-full ${hasRightColumnContent ? 'lg:w-[35%]' : 'lg:w-[60%] mx-auto'} flex flex-col bg-surface/30 rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden h-full transition-all duration-500`}>
-                            <div className="p-4 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--color-accent),0.8)]" />
-                                <span className="text-xs font-mono uppercase tracking-widest text-text-secondary">Activity Feed</span>
-                            </div>
-                            <ChatTimeline />
-                        </div>
-
-                        {/* Right Column: Results */}
-                        {hasRightColumnContent && (
-                        <div className="w-full lg:w-[65%] flex flex-col overflow-y-auto h-full pr-4 pb-32 scrollbar-hide">
-                            {/* Research Stage - Idea Cards */}
-                            {currentStage === 'research' && (
-                                (() => {
-                                    if (!ideasToRender || ideasToRender.length === 0) return null;
-
-                                    return (
-                                        <div className="space-y-8 animate-in fade-in duration-700">
-                                            <div className="flex items-center gap-3">
-                                                <Zap className="w-5 h-5 text-accent" />
-                                                <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Viral Concepts</h2>
-                                            </div>
-                                            <div className="grid gap-6 sm:grid-cols-2">
-                                                {ideasToRender.map((idea: any, i: number) => (
-                                                    <div 
-                                                        key={i} 
-                                                        onClick={() => handleHitlSelect('idea_selection', idea)}
-                                                        className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up"
-                                                        style={{ animationDelay: `${i * 150}ms` }}
-                                                    >
-                                                        <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">
-                                                            {typeof idea.title === 'string' ? idea.title : JSON.stringify(idea.title)}
-                                                        </h3>
-                                                        <p className="text-sm text-text-secondary line-clamp-3 mb-4">
-                                                            {typeof idea.description === 'string' ? idea.description : JSON.stringify(idea.description)}
-                                                        </p>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
-                                                            <span className="text-[10px] text-text-secondary font-mono">
-                                                                {typeof idea.unique_angle === 'string' ? idea.unique_angle : JSON.stringify(idea.unique_angle)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()
-                            )}
-
-                            {/* Hook Stage - Hook Cards */}
-                            {currentStage === 'hook' && status === 'interrupted' && interruptContext?.stage === 'hook_selection' && interruptContext.data && (
-                                <div className="space-y-8 animate-in fade-in duration-700">
-                                    <div className="flex items-center gap-3">
-                                        <Sparkles className="w-5 h-5 text-accent" />
-                                        <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Select a Hook</h2>
+                    /* Context-Aware Layout */
+                    <div className="relative w-full h-[calc(100vh-18rem)]">
+                        {isDiscoveryMode ? (
+                            /* DISCOVERY MODE: Strict 50/50 Grid */
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full animate-in slide-up">
+                                {/* Left Column: Chat Timeline */}
+                                <div className="flex flex-col bg-surface/30 rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden h-full">
+                                    <div className="p-4 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--color-accent),0.8)]" />
+                                        <span className="text-xs font-mono uppercase tracking-widest text-text-secondary">Activity Feed</span>
                                     </div>
-                                    <div className="grid gap-4">
-                                        {interruptContext.data.map((hook: any, i: number) => {
-                                            const hookType = typeof hook.hook_type === 'string' ? hook.hook_type : (typeof hook.type === 'string' ? hook.type : 'Variant');
-                                            const hookContent = typeof hook.script_content === 'string' ? hook.script_content : (typeof hook.content === 'string' ? hook.content : JSON.stringify(hook));
-                                            const hookWhy = typeof hook.psychological_trigger === 'string' ? hook.psychological_trigger : (typeof hook.reason === 'string' ? hook.reason : 'Grabs attention');
+                                    <ChatTimeline />
+                                </div>
+
+                                {/* Right Column: Idea/Hook Discovery Cards */}
+                                <div className="flex flex-col overflow-y-auto h-full pr-4 pb-32 scrollbar-hide">
+                                    {/* Research Stage - Idea Cards */}
+                                    {currentStage === 'research' && (
+                                        (() => {
+                                            if (!ideasToRender || ideasToRender.length === 0) return (
+                                                <div className="flex flex-col items-center justify-center h-full text-text-secondary/40 animate-pulse">
+                                                    <Zap className="w-8 h-8 mb-4 opacity-50" />
+                                                    <p className="font-mono text-xs uppercase tracking-widest">Discovering concepts...</p>
+                                                </div>
+                                            );
 
                                             return (
-                                                <div 
-                                                    key={i} 
-                                                    onClick={() => handleHitlSelect('hook_selection', hook)}
-                                                    className="card-minimal p-6 group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up flex flex-col gap-3"
-                                                    style={{ animationDelay: `${i * 150}ms` }}
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-mono text-text-secondary uppercase tracking-wider">Option {i + 1}</span>
-                                                        <span className="badge-minimal border-accent/30 text-accent">{hookType}</span>
+                                                <div className="space-y-8 animate-in fade-in duration-700">
+                                                    <div className="flex items-center gap-3">
+                                                        <Zap className="w-5 h-5 text-accent" />
+                                                        <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Viral Concepts</h2>
                                                     </div>
-                                                    <p className="text-base text-text-primary font-medium leading-relaxed">
-                                                        {hookContent}
-                                                    </p>
-                                                    <div className="text-xs text-text-secondary mt-2">
-                                                        <strong className="text-text-primary/70">Why it works:</strong> {hookWhy}
+                                                    <div className="grid gap-6 sm:grid-cols-2">
+                                                        {ideasToRender.map((idea: any, i: number) => (
+                                                            <div 
+                                                                key={i} 
+                                                                onClick={() => handleHitlSelect('idea_selection', idea)}
+                                                                className="card-minimal group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up"
+                                                                style={{ animationDelay: `${i * 150}ms` }}
+                                                            >
+                                                                <h3 className="font-semibold text-lg mb-2 group-hover:text-accent transition-colors">
+                                                                    {typeof idea.title === 'string' ? idea.title : JSON.stringify(idea.title)}
+                                                                </h3>
+                                                                <p className="text-sm text-text-secondary line-clamp-3 mb-4">
+                                                                    {typeof idea.description === 'string' ? idea.description : JSON.stringify(idea.description)}
+                                                                </p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="badge-minimal border-accent/30 text-accent">9.2 Viral Potential</span>
+                                                                    <span className="text-[10px] text-text-secondary font-mono">
+                                                                        {typeof idea.unique_angle === 'string' ? idea.unique_angle : JSON.stringify(idea.unique_angle)}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
+                                        })()
+                                    )}
 
-                            {/* Scripting / Output Stage View */}
-                            {(currentStage === 'script' || currentStage === 'edit' || currentStage === 'output') && displayContent && (
-                                <div className="space-y-8 animate-in fade-in duration-700">
+                                    {/* Hook Stage - Hook Cards */}
+                                    {currentStage === 'hook' && (
+                                        status === 'interrupted' && interruptContext?.stage === 'hook_selection' && interruptContext.data ? (
+                                            <div className="space-y-8 animate-in fade-in duration-700">
+                                                <div className="flex items-center gap-3">
+                                                    <Sparkles className="w-5 h-5 text-accent" />
+                                                    <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">Select a Hook</h2>
+                                                </div>
+                                                <div className="grid gap-4">
+                                                    {interruptContext.data.map((hook: any, i: number) => {
+                                                        const hookType = typeof hook.hook_type === 'string' ? hook.hook_type : (typeof hook.type === 'string' ? hook.type : 'Variant');
+                                                        const hookContent = typeof hook.script_content === 'string' ? hook.script_content : (typeof hook.content === 'string' ? hook.content : JSON.stringify(hook));
+                                                        const hookWhy = typeof hook.psychological_trigger === 'string' ? hook.psychological_trigger : (typeof hook.reason === 'string' ? hook.reason : 'Grabs attention');
+
+                                                        return (
+                                                            <div 
+                                                                key={i} 
+                                                                onClick={() => handleHitlSelect('hook_selection', hook)}
+                                                                className="card-minimal p-6 group cursor-pointer border border-transparent hover:border-accent/20 animate-in slide-up flex flex-col gap-3"
+                                                                style={{ animationDelay: `${i * 150}ms` }}
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-xs font-mono text-text-secondary uppercase tracking-wider">Option {i + 1}</span>
+                                                                    <span className="badge-minimal border-accent/30 text-accent">{hookType}</span>
+                                                                </div>
+                                                                <p className="text-base text-text-primary font-medium leading-relaxed">
+                                                                    {hookContent}
+                                                                </p>
+                                                                <div className="text-xs text-text-secondary mt-2">
+                                                                    <strong className="text-text-primary/70">Why it works:</strong> {hookWhy}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-full text-text-secondary/40 animate-pulse">
+                                                <Sparkles className="w-8 h-8 mb-4 opacity-50" />
+                                                <p className="font-mono text-xs uppercase tracking-widest">Generating hooks...</p>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            /* FOCUS MODE: Full Screen Editor + Chat Drawer */
+                            <div className="flex flex-col items-center justify-start h-full animate-in slide-up overflow-y-auto pb-32 scrollbar-hide w-full max-w-5xl mx-auto">
+                                {/* Focus Chat Toggle Button */}
+                                <div className="fixed top-40 right-8 z-40">
+                                    <button 
+                                        onClick={() => setIsChatOpen(true)}
+                                        className={`btn-secondary py-2.5 px-4 shadow-2xl border border-white/10 bg-surface/80 backdrop-blur-xl transition-all duration-300 ${isChatOpen ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}
+                                    >
+                                        <MessageSquare className="w-4 h-4 text-accent" />
+                                        AI Assistant
+                                        {status === 'running' && <div className="w-2 h-2 rounded-full bg-accent animate-ping ml-2" />}
+                                    </button>
+                                </div>
+
+                                {/* Scripting / Output Stage View */}
+                                <div className="w-full space-y-8 animate-in fade-in duration-700 mt-6">
                                      <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <Sparkles className="w-5 h-5 text-accent" />
-                                            <h2 className="text-xl font-display font-bold uppercase tracking-widest text-text-secondary">AI Scripting</h2>
+                                            <Sparkles className="w-6 h-6 text-accent" />
+                                            <h2 className="text-2xl font-display font-bold uppercase tracking-widest text-text-secondary">AI Script Editor</h2>
                                         </div>
                                         {status === 'running' && (
-                                            <div className="flex items-center gap-2 text-[10px] font-mono text-accent uppercase tracking-tighter">
+                                            <div className="flex items-center gap-2 text-[10px] font-mono text-accent uppercase tracking-tighter bg-accent/10 px-3 py-1.5 rounded-full border border-accent/20 shadow-glow">
                                                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
                                                 Streaming Output
                                             </div>
@@ -420,15 +457,15 @@ export default function Project() {
                                         <div className="relative p-8 bg-surface/50 border border-white/5 rounded-[2rem] shadow-2xl">
                                             <div className="prose prose-invert prose-lg max-w-none">
                                                 <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-text-primary/90">
-                                                    {displayContent}
+                                                    {displayContent || "Waiting for script..."}
                                                     {status === 'running' && <span className="inline-block w-2 h-6 bg-accent ml-1 animate-pulse" />}
                                                 </pre>
                                             </div>
                                         </div>
                                     )}
 
-                                    {status !== 'running' && (
-                                        <div className="space-y-4">
+                                    {status !== 'running' && displayContent && (
+                                        <div className="space-y-4 pt-8">
                                             <HookTester
                                                 scriptText={displayContent}
                                                 niche={currentProject?.niche || ''}
@@ -443,8 +480,30 @@ export default function Project() {
                                         </div>
                                     )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+
+                        {/* CHAT DRAWER (Only active in Focus Mode) */}
+                        {isFocusMode && (
+                            <div 
+                                className={`fixed top-0 right-0 h-full w-[400px] bg-bg/95 backdrop-blur-3xl border-l border-white/10 shadow-2xl transition-transform duration-500 ease-in-out z-50 flex flex-col ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                            >
+                                <div className="p-4 border-b border-white/10 flex items-center justify-between mt-16 bg-surface/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--color-accent),0.8)]" />
+                                        <span className="text-xs font-mono uppercase tracking-widest text-text-primary">AI Assistant</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsChatOpen(false)} 
+                                        className="p-2 text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                    <ChatTimeline />
+                                </div>
+                            </div>
                         )}
                     </div>
                 )}
