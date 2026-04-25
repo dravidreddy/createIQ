@@ -83,12 +83,10 @@ export const OutputEditor: React.FC<OutputEditorProps> = ({
             </div>
           </div>
 
-          <div className="prose prose-invert prose-p:text-text-primary prose-p:leading-relaxed prose-p:text-lg max-w-none">
-            <textarea
-              value={content}
-              readOnly
-              className="w-full bg-transparent border-none focus:ring-0 text-xl leading-relaxed min-h-[400px] resize-none scrollbar-hide text-text-primary"
-            />
+          <div className="prose prose-invert prose-p:text-text-primary prose-p:leading-relaxed prose-p:text-lg max-w-none p-6 bg-surface/50 rounded-2xl border border-white/5 shadow-inner">
+            <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-text-primary bg-transparent border-none p-0 m-0">
+              {content}
+            </pre>
           </div>
         </div>
       </div>

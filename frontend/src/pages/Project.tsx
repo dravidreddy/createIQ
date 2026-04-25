@@ -120,7 +120,7 @@ export default function Project() {
         }
     };
 
-    const handleStart = async () => {
+    const handleStart = async (overrideTopic?: string) => {
         if (!id) return;
         const platformLabels: Record<Platform, string> = {
             youtube: 'YouTube',
@@ -131,17 +131,19 @@ export default function Project() {
         };
         const selectedPlatform = platformLabels[platform];
 
+        const topicToUse = overrideTopic || currentProject.topic || 'Start pipeline';
+
         // Add user prompt to chat timeline
         addMessage({
             id: createMsgId(),
             role: 'user',
             type: 'prompt',
-            content: currentProject.topic || 'Start pipeline',
+            content: topicToUse,
             timestamp: Date.now(),
         });
 
         try {
-            await startPipeline(id, currentProject.topic || "", { 
+            await startPipeline(id, topicToUse, { 
                 niche: currentProject.niche || 'general',
                 platforms: [selectedPlatform],
                 platform: selectedPlatform,
@@ -172,15 +174,22 @@ export default function Project() {
         toast.success('Pipeline stopped');
     };
 
-    const handleFeedback = async (text?: string) => {
-        const feedback = text || instruction;
+    const handleFeedback = async (text?: string | React.KeyboardEvent) => {
+        // text could be event if called directly from onClick/onKeyDown improperly, so we safeguard it.
+        const feedbackStr = typeof text === 'string' ? text : instruction;
+        const feedback = feedbackStr.trim();
 
-        if (status === 'idle') {
-            await handleStart();
+        if (status === 'idle' || status === 'done') {
+            if (feedback) {
+                await handleStart(feedback);
+            } else {
+                await handleStart();
+            }
+            setInstruction('');
             return;
         }
 
-        if (!feedback.trim() || !threadId) return;
+        if (!feedback || !threadId) return;
 
         // Add user message to chat timeline
         addMessage({
@@ -193,11 +202,18 @@ export default function Project() {
         setInstruction('');
 
         try {
-            await resumePipeline(threadId, 'edit', currentProject.status, { feedback });
+            const stageToResume = status === 'interrupted' ? (interruptContext?.stage || currentStage) : currentStage;
+            await resumePipeline(threadId, 'edit', stageToResume, { feedback });
         } catch (err) {
             toast.error('Failed to send instruction');
         }
     };
+
+    const ideasToRender = status === 'interrupted' && interruptContext?.stage === 'idea_selection' ? interruptContext.data : currentProject.discovered_ideas;
+    const hasResearchContent = currentStage === 'research' && ideasToRender && ideasToRender.length > 0;
+    const hasHookContent = currentStage === 'hook' && status === 'interrupted' && interruptContext?.stage === 'hook_selection' && interruptContext.data;
+    const hasScriptContent = (currentStage === 'script' || currentStage === 'edit' || currentStage === 'output') && displayContent;
+    const hasRightColumnContent = hasResearchContent || hasHookContent || hasScriptContent;
 
     return (
         <div className="min-h-screen bg-bg flex flex-col pt-16 pb-32">
@@ -247,21 +263,12 @@ export default function Project() {
                     </button>
                     {status === 'idle' || status === 'done' ? (
                         <button 
-                            onClick={handleStart} 
+                            onClick={() => handleStart()} 
                             data-testid="project-execute-btn"
                             className="btn-primary py-1.5 px-4 text-xs gap-2 shadow-glow animate-pulse hover:animate-none"
                         >
                             <Play className="w-3.5 h-3.5 fill-current" />
                             Execute
-                        </button>
-                    ) : status === 'running' ? (
-                        <button 
-                            onClick={handleStop} 
-                            data-testid="project-stop-btn"
-                            className="flex items-center gap-2 py-1.5 px-4 text-xs font-medium rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all"
-                        >
-                            <Square className="w-3.5 h-3.5 fill-current" />
-                            Stop
                         </button>
                     ) : null}
                 </div>
@@ -289,7 +296,7 @@ export default function Project() {
                         <h1 className="text-4xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">CreatorIQ Pipeline</h1>
                         <p className="text-text-secondary text-lg mb-8 text-center max-w-md">The most advanced AI engine for creating viral video concepts and scripts.</p>
                         <button 
-                            onClick={handleStart} 
+                            onClick={() => handleStart()} 
                             className="btn-primary py-3 px-8 text-sm gap-2 shadow-glow animate-pulse hover:animate-none"
                         >
                             <Play className="w-4 h-4 fill-current" />
@@ -300,7 +307,7 @@ export default function Project() {
                     /* Split View Layout */
                     <div className="lg:flex lg:gap-8 animate-in slide-up h-[calc(100vh-16rem)]">
                         {/* Left Column: Chat Timeline */}
-                        <div className="w-full lg:w-[35%] flex flex-col bg-surface/30 rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden h-full">
+                        <div className={`w-full ${hasRightColumnContent ? 'lg:w-[35%]' : 'lg:w-[60%] mx-auto'} flex flex-col bg-surface/30 rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden h-full transition-all duration-500`}>
                             <div className="p-4 border-b border-white/5 bg-surface/50 backdrop-blur flex items-center gap-3">
                                 <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--color-accent),0.8)]" />
                                 <span className="text-xs font-mono uppercase tracking-widest text-text-secondary">Activity Feed</span>
@@ -309,14 +316,11 @@ export default function Project() {
                         </div>
 
                         {/* Right Column: Results */}
+                        {hasRightColumnContent && (
                         <div className="w-full lg:w-[65%] flex flex-col overflow-y-auto h-full pr-4 pb-32 scrollbar-hide">
                             {/* Research Stage - Idea Cards */}
                             {currentStage === 'research' && (
                                 (() => {
-                                    const ideasToRender = status === 'interrupted' && interruptContext?.stage === 'idea_selection' 
-                                        ? interruptContext.data 
-                                        : currentProject.discovered_ideas;
-
                                     if (!ideasToRender || ideasToRender.length === 0) return null;
 
                                     return (
@@ -441,6 +445,7 @@ export default function Project() {
                                 </div>
                             )}
                         </div>
+                        )}
                     </div>
                 )}
             </main>
@@ -463,9 +468,18 @@ export default function Project() {
                             currentText={instruction}
                             disabled={status === 'running'} 
                         />
+                        {(status === 'running' || status === 'interrupted') && (
+                            <button 
+                                onClick={handleStop}
+                                className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/20 transition-all animate-in fade-in zoom-in"
+                                title="Stop Pipeline"
+                            >
+                                <Square className="w-5 h-5 fill-current" />
+                            </button>
+                        )}
                         <button 
                             onClick={() => handleFeedback()}
-                            disabled={!instruction.trim() || status === 'running'}
+                            disabled={!instruction.trim() && status !== 'idle' && status !== 'done'}
                             className="p-3 bg-accent text-bg rounded-xl hover:bg-accent-hover transition-all disabled:opacity-30"
                         >
                             <Sparkles className="w-5 h-5 fill-current" />

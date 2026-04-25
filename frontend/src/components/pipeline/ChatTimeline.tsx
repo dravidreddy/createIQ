@@ -8,10 +8,10 @@ export function ChatTimeline() {
     const status = useStreamingStore((s) => s.status);
     const bottomRef = useRef<HTMLDivElement>(null);
 
-    // Auto-scroll to bottom on new messages
+    // Auto-scroll to bottom on new messages or status changes (e.g. processing indicator)
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages.length]);
+    }, [messages.length, status]);
 
     if (messages.length === 0 && status === 'idle') {
         return (
